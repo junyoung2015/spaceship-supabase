@@ -21,7 +21,7 @@ body:
     id: environment
     attributes:
       label: Environment
-      placeholder: zsh 5.9; Spaceship v4; spaceship-supabase v0.1.0; Ubuntu 24.04
+      placeholder: zsh 5.9; Spaceship v4; spaceship-supabase v0.1.1; Ubuntu 24.04
   - type: checkboxes
     id: security
     attributes:

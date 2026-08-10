@@ -25,34 +25,79 @@ No Supabase CLI executable, network access, credential lookup, Node, Python, or 
 
 ### Oh My Zsh
 
-Install and configure Spaceship Prompt first. Clone this repository into your custom plugin directory:
+Install and configure Spaceship Prompt first. Clone the current release into your custom plugin directory:
 
 ```zsh
-git clone https://github.com/junyoung2015/spaceship-supabase.git \
+git clone --depth 1 --branch v0.1.1 https://github.com/junyoung2015/spaceship-supabase.git \
   "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/spaceship-supabase"
 ```
 
-In `.zshrc`, source the section **after** Oh My Zsh has loaded your Spaceship theme:
+While the repository is private, run the clone with a GitHub account that has
+read access (or use its SSH URL). Do not also add `spaceship-supabase` to Oh My
+Zsh's `plugins=(...)` list: source it once, **after** Oh My Zsh has loaded your
+Spaceship theme, then register the external section in the prompt order:
 
 ```zsh
 ZSH_THEME="spaceship"
 source "$ZSH/oh-my-zsh.sh"
 
 source "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/spaceship-supabase/spaceship-supabase.plugin.zsh"
+
+# Add the custom section once, before the prompt character.
+if (( ${SPACESHIP_PROMPT_ORDER[(Ie)supabase]} == 0 )); then
+  spaceship add --before char supabase
+fi
 ```
 
 Restart the shell or run `source ~/.zshrc`.
 
 ### Generic Zsh
 
-Source Spaceship Prompt before the section. Adjust both paths to your installation:
+Clone the current release wherever you keep prompt plugins, then source
+Spaceship Prompt before the section. This example uses a local-share directory:
+
+```zsh
+git clone --depth 1 --branch v0.1.1 https://github.com/junyoung2015/spaceship-supabase.git \
+  "$HOME/.local/share/spaceship-supabase"
+```
+
+Adjust the Spaceship path to your installation:
 
 ```zsh
 source "$HOME/.local/share/spaceship/spaceship.zsh"
 source "$HOME/.local/share/spaceship-supabase/spaceship-supabase.plugin.zsh"
+
+# Add the custom section once, before the prompt character.
+if (( ${SPACESHIP_PROMPT_ORDER[(Ie)supabase]} == 0 )); then
+  spaceship add --before char supabase
+fi
 ```
 
-For either installation route, make configuration assignments before the next prompt is drawn. The section can be loaded once and reconfigured in the current shell.
+The registration guard is intentional and idempotent. A loaded external section
+is not rendered until it is named in `SPACESHIP_PROMPT_ORDER`; repeatedly
+running `spaceship add` without the guard would duplicate the section. For
+either installation route, make configuration assignments before the next
+prompt is drawn. The section can be loaded once and reconfigured in the current
+shell.
+
+### Manual private dogfooding and updates
+
+v0.1.1 deliberately has no auto-updater or `curl | sh` installer. A prompt
+plugin runs in your interactive shell, so use an explicit release tag that you
+can inspect and roll back. From a clone installed by the instructions above:
+
+```zsh
+# Set this to the clone you installed. This is the Oh My Zsh default.
+plugin_dir="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/spaceship-supabase"
+git -C "$plugin_dir" fetch --tags --prune origin
+git -C "$plugin_dir" show --no-patch --format=fuller v0.1.1
+git -C "$plugin_dir" checkout --detach v0.1.1
+exec zsh
+```
+
+Replace `v0.1.1` only after reviewing the next release's notes and tag. While
+the repository is private, these commands require authenticated GitHub read
+access. To roll back, check out a previous reviewed tag with the same command.
 
 ## Quick verification
 

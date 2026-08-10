@@ -74,4 +74,4 @@ The branch is optional decoration, not identity. If its directory or file is abs
 
 ## Unsupported layout
 
-`.supabase/project.json` belongs to Supabase's unreleased next-shell work, not the stable v0.1.0 CLI contract. It is intentionally unsupported for this release. A future opt-in adapter may be considered only after it is part of a stable, documented CLI contract and has equivalent safety coverage.
+`.supabase/project.json` belongs to Supabase's unreleased next-shell work, not the stable v0.1.1 CLI contract. It is intentionally unsupported for this release. A future opt-in adapter may be considered only after it is part of a stable, documented CLI contract and has equivalent safety coverage.

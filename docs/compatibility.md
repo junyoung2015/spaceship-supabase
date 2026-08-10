@@ -2,7 +2,7 @@
 
 ## Supported environment
 
-v0.1.0 supports:
+v0.1.1 supports:
 
 - Zsh 5.2 and later;
 - Spaceship Prompt v4 through the `spaceship::section::v4` interface; the audited test dependency is v4.21.0;
@@ -28,7 +28,7 @@ The optional `supabase/.branches/_current_branch` input is a local database-bran
 
 An unsupported, malformed, unreadable, oversized, symlinked, or ambiguous **identity-critical** root/config/live-ref layout is not a compatibility fallback. It renders no segment. This is a security property: a terminal prompt must not turn arbitrary filesystem bytes into trusted context. The local-db branch is optional decoration: an unsafe branch file is omitted while an independently valid live ref remains visible.
 
-v0.1.0 intentionally does not support:
+v0.1.1 intentionally does not support:
 
 - `.supabase/project.json`, which belongs to unreleased next-shell work rather than the stable CLI contract;
 - hosted-branch inference from the local database branch file;

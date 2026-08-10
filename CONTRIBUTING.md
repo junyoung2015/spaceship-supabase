@@ -34,7 +34,7 @@ Do not trade explicit critical failure-path tests for an xtrace percentage. Revi
 
 ## Documentation and changelog
 
-Keep `README.md`, configuration, data-source, label, troubleshooting, compatibility, and testing documentation synchronized with implementation. Update `CHANGELOG.md` under `Unreleased` for user-visible changes. The release manager moves curated entries into a dated release section at tag cut; contributors should not pre-date a future release.
+Keep `README.md`, configuration, data-source, label, troubleshooting, compatibility, and testing documentation synchronized with implementation. Update `CHANGELOG.md` under `Unreleased` for user-visible changes. During a version cut, the release manager adds one undated `## [X.Y.Z]` section for the candidate; the sanitized public release commit may add its ISO date before the annotated tag is pushed. Contributors should not pre-date a future release.
 
 If a stable Supabase CLI layout changes, add a synthetic versioned fixture, document the evidence and compatibility impact, and retain the previous supported fixture until the support policy changes.
 
