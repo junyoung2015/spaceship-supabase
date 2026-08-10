@@ -1,0 +1,33 @@
+name: "Feature request"
+description: "Suggest a scoped improvement to the Zsh plugin."
+title: "feature: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Problem or opportunity
+      description: Describe the terminal workflow that is difficult today.
+      placeholder: I need a safe way to distinguish two currently linked projects without introducing network calls.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Include the expected prompt text, configuration, and safety/privacy trade-offs where relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance criteria
+      description: State observable behavior and the tests that would establish it.
+      placeholder: |
+        - [ ] The segment remains silent for invalid local state.
+        - [ ] The rendered project reference remains complete and unambiguous.
+  - type: textarea
+    id: refs
+    attributes:
+      label: Relevant links or alternatives (optional)
+      placeholder: Supabase CLI documentation, related issues, or prior art.

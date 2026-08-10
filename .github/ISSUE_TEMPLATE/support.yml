@@ -1,0 +1,31 @@
+name: "Support question"
+description: "Get help with installation, configuration, or expected behavior."
+title: "support: "
+labels: ["question"]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: What are you trying to do?
+      description: Explain the desired terminal behavior without sharing project refs, keys, or private paths.
+    validations:
+      required: true
+  - type: textarea
+    id: attempted
+    attributes:
+      label: What have you tried?
+      description: Include the relevant documented setting and a sanitized result.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: zsh 5.9; Spaceship v4; spaceship-supabase v0.1.0; Ubuntu 24.04
+  - type: checkboxes
+    id: security
+    attributes:
+      label: Safety check
+      options:
+        - label: This is not a security vulnerability or secret exposure report.
+          required: true

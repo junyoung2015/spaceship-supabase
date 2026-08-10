@@ -1,0 +1,48 @@
+#!/usr/bin/env zsh
+# Validate an annotated release tag and optionally write its curated notes.
+
+emulate -LR zsh
+setopt errexit nounset pipefail
+
+typeset script_dir repo_root tag version tag_object tag_type commit notes
+script_dir=${0:A:h}
+repo_root=$(git -C "$script_dir" rev-parse --show-toplevel)
+cd -- "$repo_root"
+
+fail() {
+  print -u2 -r -- "release preflight: $1"
+  exit 1
+}
+
+(( $# == 1 )) || fail 'usage: release-preflight.zsh <annotated-vX.Y.Z-tag>'
+tag=$1
+[[ "$tag" =~ ^v[0-9]+[.][0-9]+[.][0-9]+$ ]] || fail 'tag must use the vX.Y.Z stable SemVer form'
+
+zsh -f "$repo_root/.github/scripts/metadata-check.zsh"
+
+version=$(<VERSION)
+[[ "$tag" == "v$version" ]] || fail "tag $tag does not match VERSION $version"
+
+git rev-parse --verify --quiet "refs/tags/$tag" >/dev/null || fail "tag $tag does not exist"
+tag_object=$(git rev-parse "refs/tags/$tag")
+tag_type=$(git cat-file -t "$tag_object")
+[[ "$tag_type" == tag ]] || fail "tag $tag must be annotated"
+commit=$(git rev-parse "$tag^{commit}") || fail "tag $tag does not resolve to a commit"
+
+git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main >/dev/null 2>&1 || fail 'could not fetch origin/main'
+git merge-base --is-ancestor "$commit" origin/main || fail "tag $tag is not reachable from main"
+
+notes=$(awk -v heading="## [$version]" -v version="$version" '
+  $0 == heading || $0 ~ "^## \\[" version "\\] - [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]$" { found = 1; next }
+  found && /^## / { exit }
+  found { print }
+  END { if (!found) exit 2 }
+' CHANGELOG.md) || fail "could not extract the $version changelog section"
+[[ -n "${notes//[[:space:]]/}" ]] || fail "the $version changelog section is empty"
+
+if [[ -n "${RELEASE_NOTES_FILE:-}" ]]; then
+  : > "$RELEASE_NOTES_FILE" || fail 'could not create the release-notes file'
+  print -r -- "$notes" > "$RELEASE_NOTES_FILE" || fail 'could not write the release-notes file'
+fi
+
+print -r -- "release preflight: $tag is annotated, reaches main, matches VERSION, and has curated notes"

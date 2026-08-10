@@ -1,0 +1,22 @@
+# BMad-Method
+_bmad/
+# _bmad-output/
+.agent/
+.claude
+.codex
+.cursor
+.gemini
+# .github/agents/
+.github/instructions/
+.github/prompts/
+.qwen
+.serena
+.vscode
+
+# Runtime state created by the Supabase CLI at this repository root. Keep the
+# scope root-relative so synthetic test fixtures under tests/ remain tracked.
+/supabase/
+/.supabase/
+final-plan*.md
+initial-plan*.md
+*.bak

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability privately
+    url: https://github.com/junyoung2015/spaceship-supabase/security/advisories/new
+    about: Do not open public security issues. Use GitHub private vulnerability reporting instead.
+  - name: Read troubleshooting and support guidance
+    url: https://github.com/junyoung2015/spaceship-supabase/blob/main/SUPPORT.md
+    about: Start with the documented local checks before opening a support question.

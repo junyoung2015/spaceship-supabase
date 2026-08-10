@@ -1,0 +1,44 @@
+name: "Bug report"
+description: "Report a reproducible problem with the Zsh prompt plugin."
+title: "bug: "
+labels: ["bug"]
+body:
+  - type: input
+    id: summary
+    attributes:
+      label: Concise summary
+      description: What did the prompt do, and what did you expect instead?
+      placeholder: The Supabase segment remains visible after project-ref is removed.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      description: Include the smallest safe directory layout and configuration that reproduces the issue. Do not include project references, tokens, or private paths.
+      placeholder: |
+        1. Source Spaceship, then spaceship-supabase.
+        2. Create the documented synthetic Supabase layout.
+        3. Call spaceship_supabase.
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Expected and actual behavior
+      placeholder: |
+        Expected:
+        Actual:
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      description: Zsh, Spaceship Prompt, plugin, Supabase CLI (if installed), and OS versions.
+      placeholder: zsh 5.9; Spaceship v4; spaceship-supabase v0.1.0; macOS 15
+  - type: textarea
+    id: safe_output
+    attributes:
+      label: Sanitized output or diagnostics (optional)
+      description: Remove project refs, account names, filesystem paths, keys, and terminal escape sequences before pasting.

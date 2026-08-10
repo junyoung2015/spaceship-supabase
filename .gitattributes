@@ -1,0 +1,12 @@
+# Keep the public shell plugin, documentation, and GitHub configuration
+# portable across macOS and Linux checkouts.
+* text=auto eol=lf
+*.zsh text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# Vendored upstream source is retained byte-for-byte for auditability. Its
+# historical whitespace is intentionally not rewritten or treated as a local
+# whitespace error during the initial public export.
+tests/vendor/** whitespace=-trailing-space,-space-before-tab

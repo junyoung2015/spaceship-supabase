@@ -1,0 +1,87 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing annotated vX.Y.Z tag to recover a failed publication.
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  release-gate:
+    name: Reusable release gate
+    uses: ./.github/workflows/ci.yml
+    with:
+      release_tag: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+
+  publish:
+    name: Publish GitHub Release
+    needs: release-gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    # This is deliberately the only job in the release pipeline with write
+    # access, and it runs only after all reusable CI gates are green.
+    permissions:
+      contents: write
+    steps:
+      - name: Check out complete tag history
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install Zsh
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install --yes zsh
+
+      - name: Recheck annotated tag and write curated release notes
+        env:
+          RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+          RELEASE_NOTES_FILE: ${{ runner.temp }}/spaceship-supabase-release-notes.md
+        run: zsh -f .github/scripts/release-preflight.zsh "$RELEASE_TAG"
+
+      - name: Reject duplicate release immediately before publication
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+        run: |
+          set -euo pipefail
+          status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            --header 'X-GitHub-Api-Version: 2022-11-28' \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG")"
+          case "$status" in
+            404) ;;
+            200) echo "A GitHub Release for $RELEASE_TAG already exists." >&2; exit 1 ;;
+            *) echo "Unexpected GitHub API status while checking releases: $status" >&2; exit 1 ;;
+          esac
+
+      - name: Create the GitHub Release from the curated changelog
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+          RELEASE_NOTES_FILE: ${{ runner.temp }}/spaceship-supabase-release-notes.md
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release create "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --verify-tag \
+            --title "$RELEASE_TAG" \
+            --notes-file "$RELEASE_NOTES_FILE"

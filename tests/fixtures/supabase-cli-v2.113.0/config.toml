@@ -1,0 +1,6 @@
+# Synthetic stable CLI fixture. `project_id` is deliberately local-only.
+project_id = "local-workspace-only"
+
+[api]
+enabled = true
+port = 54321

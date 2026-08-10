@@ -1,0 +1,24 @@
+name: "Documentation improvement"
+description: "Report an inaccurate, missing, or unclear public documentation detail."
+title: "docs: "
+labels: ["documentation"]
+body:
+  - type: input
+    id: location
+    attributes:
+      label: Documentation location
+      description: Link to the README section or documentation file.
+      placeholder: docs/configuration.md — Labels
+    validations:
+      required: true
+  - type: textarea
+    id: issue
+    attributes:
+      label: What is unclear or incorrect?
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested correction (optional)
+      description: Keep examples synthetic; never paste real project references or credentials.

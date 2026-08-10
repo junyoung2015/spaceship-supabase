@@ -1,0 +1,311 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_call:
+    inputs:
+      release_tag:
+        description: Annotated vX.Y.Z tag to validate as a release candidate.
+        required: false
+        default: ""
+        type: string
+
+# Every job is read-only by default. The release workflow is the only place
+# that raises this to contents: write, after this reusable gate succeeds.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  metadata:
+    name: Metadata and public-tree audit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Check out the candidate
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ inputs.release_tag || github.sha }}
+          persist-credentials: false
+
+      - name: Install Zsh
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install --yes zsh
+
+      - name: Validate release metadata and public tree
+        run: zsh -f .github/scripts/metadata-check.zsh
+
+  lint:
+    name: Zsh syntax and ShellCheck
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Check out the candidate
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ inputs.release_tag || github.sha }}
+          persist-credentials: false
+
+      - name: Install Zsh
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install --yes zsh
+
+      - name: Check every first-party Zsh file for syntax errors
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r -d '' file; do
+            case "$file" in
+              ./tests/vendor/*|./docs/archive/*|./_bmad-output/*) continue ;;
+            esac
+            zsh -n "$file"
+          done < <(find . -type f -name '*.zsh' -print0)
+
+      - name: Install verified ShellCheck 0.11.0
+        id: shellcheck
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/shellcheck-v0.11.0.linux.x86_64.tar.xz"
+          install_dir="$RUNNER_TEMP/shellcheck-v0.11.0"
+          curl --fail --location --proto '=https' --tlsv1.2 --silent --show-error \
+            --output "$archive" \
+            https://github.com/koalaman/shellcheck/releases/download/v0.11.0/shellcheck-v0.11.0.linux.x86_64.tar.xz
+          printf '%s  %s\n' \
+            '8c3be12b05d5c177a04c29e3c78ce89ac86f1595681cab149b65b97c4e227198' \
+            "$archive" | shasum --algorithm 256 --check --status -
+          mkdir -p "$install_dir"
+          tar --extract --xz --file "$archive" --strip-components=1 --directory "$install_dir"
+          "$install_dir/shellcheck" --version | grep --fixed-strings 'version: 0.11.0'
+          echo "path=$install_dir/shellcheck" >> "$GITHUB_OUTPUT"
+
+      - name: ShellCheck the production plugin
+        shell: bash
+        run: |
+          set -euo pipefail
+          "${{ steps.shellcheck.outputs.path }}" --norc --shell=bash \
+            --exclude=SC1071,SC1090,SC1091,SC2034,SC2148,SC2155,SC2296,SC2298 \
+            spaceship-supabase.plugin.zsh
+
+  secret-scan:
+    name: Gitleaks history and worktree scan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Check out complete history
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ inputs.release_tag || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Confirm the scanned worktree is the checked-out commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --exit-code
+          git diff --cached --exit-code
+
+      - name: Install verified Gitleaks 8.30.1
+        id: gitleaks
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/gitleaks_8.30.1_linux_x64.tar.gz"
+          install_dir="$RUNNER_TEMP/gitleaks-8.30.1"
+          curl --fail --location --proto '=https' --tlsv1.2 --silent --show-error \
+            --output "$archive" \
+            https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
+          printf '%s  %s\n' \
+            '551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb' \
+            "$archive" | sha256sum --check --status -
+          mkdir -p "$install_dir"
+          tar --extract --gzip --file "$archive" --directory "$install_dir"
+          "$install_dir/gitleaks" version
+          echo "path=$install_dir/gitleaks" >> "$GITHUB_OUTPUT"
+
+      - name: Scan every reachable Git object
+        shell: bash
+        run: |
+          set -euo pipefail
+          "${{ steps.gitleaks.outputs.path }}" git --redact --exit-code 1 --log-opts='--all' .
+
+      - name: Scan the checked-out worktree
+        shell: bash
+        run: |
+          set -euo pipefail
+          "${{ steps.gitleaks.outputs.path }}" dir --redact --exit-code 1 .
+
+  test:
+    name: Tests (${{ matrix.name }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Ubuntu 24.04 system Zsh
+            os: ubuntu-24.04
+            zsh: system
+          - name: macOS 15 system Zsh
+            os: macos-15
+            zsh: system
+          - name: Ubuntu 24.04 built Zsh 5.2
+            os: ubuntu-24.04
+            zsh: "5.2"
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - name: Check out the candidate
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ inputs.release_tag || github.sha }}
+          persist-credentials: false
+
+      - name: Install system Zsh on Ubuntu
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install --yes zsh
+
+      - name: Build verified Zsh 5.2
+        if: matrix.zsh == '5.2'
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get install --yes build-essential libncursesw5-dev xz-utils
+          build_dir="$(mktemp -d "$RUNNER_TEMP/zsh-5.2.XXXXXX")"
+          prefix="$RUNNER_TEMP/zsh-5.2"
+          archive="$build_dir/zsh-5.2.tar.xz"
+          curl --fail --location --proto '=https' --tlsv1.2 --silent --show-error \
+            --output "$archive" https://www.zsh.org/pub/old/zsh-5.2.tar.xz
+          printf '%s  %s\n' \
+            'f17916320ffaa844bbd7ce48ceeb5945fc5f3eff64b149b4229bbfbdf3795a9d' \
+            "$archive" | sha256sum --check --status -
+          tar --extract --xz --file "$archive" --directory "$build_dir"
+          cd "$build_dir/zsh-5.2"
+          # Zsh 5.2's configure probes tcsetpgrp through a controlling TTY.
+          # GitHub Actions shell steps are non-interactive, so disable that
+          # optional job-control probe rather than weakening the 5.2 test lane.
+          ./configure --prefix="$prefix" --without-tcsetpgrp
+          make --jobs=2
+          make install
+          "$prefix/bin/zsh" --version | grep --fixed-strings 'zsh 5.2'
+
+      - name: Select the test interpreter
+        id: selected-zsh
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ matrix.zsh }}" == '5.2' ]]; then
+            test_zsh="$RUNNER_TEMP/zsh-5.2/bin/zsh"
+          else
+            test_zsh="$(command -v zsh)"
+          fi
+          echo "path=$test_zsh" >> "$GITHUB_OUTPUT"
+          "$test_zsh" --version
+
+      - name: Run the canonical maintained suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x tests/run.zsh
+          ZSH_BIN="${{ steps.selected-zsh.outputs.path }}" tests/run.zsh
+
+  benchmark:
+    name: Direct-render benchmark
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Check out the candidate
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ inputs.release_tag || github.sha }}
+          persist-credentials: false
+
+      - name: Install Zsh
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install --yes zsh
+
+      - name: Run and publish five-batch benchmark samples
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x tests/run.zsh
+          {
+            echo '## Direct-render benchmark'
+            echo
+            echo '```text'
+            ZSH_BIN="$(command -v zsh)" tests/run.zsh --performance
+            echo '```'
+          } | tee --append "$GITHUB_STEP_SUMMARY"
+
+  release-preflight:
+    name: Release preflight
+    if: ${{ inputs.release_tag != '' }}
+    needs: [metadata, lint, secret-scan, test, benchmark]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Check out complete tag history
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ inputs.release_tag }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install Zsh
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install --yes zsh
+
+      - name: Verify tag, version, changelog, and main ancestry
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: zsh -f .github/scripts/release-preflight.zsh "$RELEASE_TAG"
+
+      - name: Reject an existing GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          set -euo pipefail
+          status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            --header 'X-GitHub-Api-Version: 2022-11-28' \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG")"
+          case "$status" in
+            404) ;;
+            200) echo "A GitHub Release for $RELEASE_TAG already exists." >&2; exit 1 ;;
+            *) echo "Unexpected GitHub API status while checking releases: $status" >&2; exit 1 ;;
+          esac
