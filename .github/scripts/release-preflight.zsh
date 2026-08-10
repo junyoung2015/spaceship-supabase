@@ -29,7 +29,12 @@ tag_type=$(git cat-file -t "$tag_object")
 [[ "$tag_type" == tag ]] || fail "tag $tag must be annotated"
 commit=$(git rev-parse "$tag^{commit}") || fail "tag $tag does not resolve to a commit"
 
-git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main >/dev/null 2>&1 || fail 'could not fetch origin/main'
+# actions/checkout with fetch-depth: 0 already supplies origin/main. Reuse that
+# authenticated checkout state: persisted credentials are intentionally disabled
+# for this release gate, so an unnecessary second fetch fails for private repos.
+if ! git show-ref --verify --quiet refs/remotes/origin/main; then
+  git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main >/dev/null 2>&1 || fail 'could not fetch origin/main'
+fi
 git merge-base --is-ancestor "$commit" origin/main || fail "tag $tag is not reachable from main"
 
 notes=$(awk -v heading="## [$version]" -v version="$version" '
