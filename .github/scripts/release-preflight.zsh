@@ -18,7 +18,11 @@ fail() {
 tag=$1
 [[ "$tag" =~ ^v[0-9]+[.][0-9]+[.][0-9]+$ ]] || fail 'tag must use the vX.Y.Z stable SemVer form'
 
-zsh -f "$repo_root/.github/scripts/metadata-check.zsh"
+# A release preflight always operates on the publishable tree. Keep this
+# invariant inside the script so every caller, including the final publish
+# recheck, rejects private-only paths without relying on workflow-local env.
+SPACESHIP_SUPABASE_REQUIRE_PUBLIC_TREE=true \
+  zsh -f "$repo_root/.github/scripts/metadata-check.zsh"
 
 version=$(<VERSION)
 [[ "$tag" == "v$version" ]] || fail "tag $tag does not match VERSION $version"

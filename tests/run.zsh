@@ -44,7 +44,10 @@ cleanup() {
     zf_rm -r "$run_dir"
   fi
 }
-trap cleanup EXIT HUP INT TERM
+trap cleanup EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 typeset failed=0
 typeset suite=""

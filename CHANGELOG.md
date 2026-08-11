@@ -6,6 +6,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+### Fixed
+
+- Required strict public-tree auditing inside every release-preflight invocation, including the final publication recheck.
+- Made the canonical test runner exit immediately with conventional status codes after `HUP`, `INT`, or `TERM` while retaining temporary-directory cleanup.
+
 ## [0.1.1] - 2026-08-10
 
 ### Fixed
