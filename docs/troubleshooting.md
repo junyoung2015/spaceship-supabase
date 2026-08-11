@@ -120,4 +120,7 @@ Set `SPACESHIP_SUPABASE_DEBUG=true` temporarily to enable fixed diagnostic codes
 
 ## Unsupported layouts
 
-The stable v0.1.1 contract does not support `.supabase/project.json`. That path belongs to unreleased next-shell work and is intentionally not interpreted. See [compatibility](compatibility.md) for the supported layout and future-adapter policy.
+The stable v0.1.1 contract does not support `.supabase/project.json`. That path
+belongs to the alpha next/V3 shell rather than the stable release channel and is
+intentionally not interpreted. See [compatibility](compatibility.md) for the
+supported layout and future-adapter policy.

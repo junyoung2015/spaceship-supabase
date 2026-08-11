@@ -2,6 +2,18 @@
 
 Thanks for helping improve `spaceship-supabase`. This project is deliberately small because terminal prompts cross a sensitive trust boundary: input may come from an arbitrary checkout, but output influences what a developer believes they are operating on.
 
+## Planning and issues
+
+Read the [product roadmap](docs/roadmap.md) before proposing a behavior change.
+GitHub milestones and issues are the active backlog; the private initial-plan
+and BMad archives are historical context only. Open or reference an issue before
+changing identity precedence, target naming, branch semantics, persistence,
+network/CLI boundaries, or the public configuration contract.
+
+Compatibility proposals must cite primary Supabase sources and update or add a
+report under `docs/research/`. A source file existing in a non-stable CLI tree
+or channel is not, by itself, a supported contract.
+
 ## Local setup
 
 1. Use Zsh 5.2 or later.
@@ -24,7 +36,11 @@ The runner uses tracked vendor dependencies and creates temporary synthetic proj
 - A live valid `supabase/.temp/project-ref` always wins. A selected config mapping is marked and non-authoritative; a label can only decorate a currently resolved reference.
 - Do not add an automatic remote lookup, historical identity cache, arbitrary output templates, truncation, branch-only output, or `.supabase/project.json` support without an approved product-contract and security review.
 
-Read [AGENTS.md](AGENTS.md) for the complete implementation constraints, and [docs/data-sources.md](docs/data-sources.md) before changing resolver behavior.
+Read [AGENTS.md](AGENTS.md) for the complete implementation constraints,
+[docs/data-sources.md](docs/data-sources.md) before changing resolver behavior,
+and the current
+[Supabase CLI target-context research](docs/research/supabase-cli-project-names.md)
+before changing project-name or branch sources.
 
 ## Tests and fixtures
 
