@@ -25,6 +25,9 @@ another command-specific override can still direct an operation elsewhere.
   [`docs/research/supabase-cli-project-names.md`](research/supabase-cli-project-names.md).
 - Accepted v0.2 product contract:
   [`docs/design/v0.2-target-context-contract.md`](design/v0.2-target-context-contract.md).
+- Beta decision evidence template, currently unpopulated and not a claim that
+  beta behavior has shipped:
+  [`docs/beta/v0.2-beta-acceptance-report-template.md`](beta/v0.2-beta-acceptance-report-template.md).
 
 The milestone has no calendar deadline. It closes when its outcome and safety
 gates are met.
@@ -105,8 +108,8 @@ Every roadmap item must preserve these rules:
    `Production` and `Staging` are user/workflow vocabulary unless an explicit
    configured source says otherwise; a default branch alone proves neither.
 3. **Make provenance reviewable.** A user must be able to learn whether a name
-   came from their label, a matching local CLI snapshot, configured mapping, or
-   an explicit refresh.
+   came from their manual label, a configured mapping, or an explicit remote
+   sync record. The telemetry snapshot is not a v0.2 source.
 4. **Keep the prompt path local and read-only.** No CLI process, network call,
    credential lookup, external parser, or write may occur during rendering.
 5. **Live identity wins.** Decoration must match the currently validated live
@@ -141,39 +144,38 @@ name.
 
 ### Delivery sequence
 
-1. **Lock the target-context vocabulary and provenance UX.** The accepted
+1. **Keep the vocabulary and provenance contract fixed.** The accepted
    [`v0.2 target-context contract`](design/v0.2-target-context-contract.md)
-   defines exactly what `project name`, `manual label`, `configured mapping`,
-   `hosted branch`, and `local database branch` mean; it also freezes the
-   smallest readable forms, privacy defaults, and decoration precedence before
-   feature code begins.
-2. **Make manual custom names first-class.** Improve discovery, examples, and
-   diagnostics around the existing ref-keyed label workflow. This is the most
-   dependable way to express operational vocabulary such as `Production` or
-   `Customer staging` across every supported CLI layout.
-3. **Add explicit project-name discovery.** A user-invoked helper may call
-   authenticated Supabase CLI commands, require an exact live-ref match, show
-   the proposed mapping, and atomically update a provenance-aware, user-owned
-   decoration record. It must not overwrite a manual label; the manual label
-   wins when both exist. The helper must never run automatically or from prompt
-   rendering.
-4. **Run a guarded local-snapshot adapter spike.** The stable CLI's
-   `linked-project.json` is internal telemetry state, not a documented identity
-   interface. It has no freshness timestamp and can retain old data. Ship an
-   opt-in adapter only if a bounded Zsh-native parser and clear link-time
-   provenance justify the complexity; require its embedded ref to exactly match
-   the independently validated live `project-ref`. Otherwise record the no-go
-   decision and keep the explicit-refresh/manual-label path.
-5. **Treat hosted branch/environment display as research-gated.** An explicit
-   refresh may map a branch ref to a hosted branch name only when a pinned
-   stable CLI response identifies that exact ref. The first design should
-   require or explicitly obtain the parent project ref rather than scanning an
-   account silently. No local database branch, Git branch, config table name,
-   or project-name guess may masquerade as a hosted branch.
-6. **Ship the full trust and compatibility gate.** Add pinned synthetic
-   fixtures, actual Spaceship v4 injection tests, freshness and mismatch tests,
-   helper permission/atomicity tests, CLI/network call-boundary tests,
-   cross-version CI, performance samples, and synchronized documentation.
+   defines `project name`, `manual label`, `configured mapping`, `hosted
+   branch`, and `local database branch`; it also fixes the readable forms,
+   privacy defaults, and decoration precedence. Feature work does not reopen
+   those semantics without a new product decision.
+2. **Ship one narrow beta.1 enrichment path.** [#6](https://github.com/junyoung2015/spaceship-supabase/issues/6)
+   owns an explicit, user-confirmed top-level project sync. It may match only
+   the current valid live ref through a user-invoked Supabase CLI action and
+   save a separate provenance-aware `synced:project` decoration. It never
+   overwrites a manual label and never runs from prompt rendering.
+3. **Prove that beta.1 cannot weaken the prompt.** [#7](https://github.com/junyoung2015/spaceship-supabase/issues/7)
+   owns the fake-CLI boundary, separate-state, actual Spaceship v4 injection,
+   cross-version, freshness, and performance tests. [#8](https://github.com/junyoung2015/spaceship-supabase/issues/8)
+   promotes only that implemented behavior into public reference docs.
+4. **Make a beta release reviewable before inviting anyone.**
+   [#14](https://github.com/junyoung2015/spaceship-supabase/issues/14) adds a
+   guarded annotated `v0.2.0-beta.N` prerelease path. [#15](https://github.com/junyoung2015/spaceship-supabase/issues/15)
+   provides the redacted go/extend/pause evidence structure; its working term
+   “Dongtan report” remains undefined until the board supplies the audience,
+   access, confidentiality, security-route, and approval decisions.
+5. **Treat hosted-branch display as later, separate scope.**
+   [#13](https://github.com/junyoung2015/spaceship-supabase/issues/13) begins
+   only after top-level beta.1 proves the decoration model. It requires a
+   user-supplied parent ref and one exact remote branch-project-ref match. No
+   local database branch, Git branch, config name, or project-name guess may
+   masquerade as a hosted branch.
+6. **Keep the telemetry snapshot out of the beta.**
+   [#5](https://github.com/junyoung2015/spaceship-supabase/issues/5) is a
+   deliberate no-go for `linked-project.json` in v0.2 and the first external
+   beta. The prompt continues to use manual labels and, when #6 ships, the
+   explicit confirmed sync record instead.
 
 ### GitHub issue map
 
@@ -184,11 +186,14 @@ order without duplicating open/closed state in this document.
 | --- | --- | --- |
 | [#3 — CLI name and branch research](https://github.com/junyoung2015/spaceship-supabase/issues/3) | Verify stable local and explicit-refresh sources. | — |
 | [#4 — target-context UX](https://github.com/junyoung2015/spaceship-supabase/issues/4) | Define truthful vocabulary, display, privacy, and precedence. | #3 |
-| [#5 — linked project-name decoration spike](https://github.com/junyoung2015/spaceship-supabase/issues/5) | Decide whether guarded, ref-matched telemetry state is worth supporting. | #3, #4 |
-| [#6 — explicit project/branch sync](https://github.com/junyoung2015/spaceship-supabase/issues/6) | Resolve exact remote context only on an explicit user action. | #3, #4 |
-| [#7 — security and compatibility coverage](https://github.com/junyoung2015/spaceship-supabase/issues/7) | Prove enrichment remains safe, compatible, fresh, and fast. | #5, #6 |
-| [#8 — provenance and migration docs](https://github.com/junyoung2015/spaceship-supabase/issues/8) | Publish complete behavior, privacy, and troubleshooting guidance. | #4–#6 |
-| [#9 — v0.2.0 release](https://github.com/junyoung2015/spaceship-supabase/issues/9) | Dogfood, pass the release gate, tag, and publish. | #3–#8 |
+| [#5 — linked project-name decoration spike](https://github.com/junyoung2015/spaceship-supabase/issues/5) | Closed no-go: do not consume undocumented telemetry state in v0.2 or the first external beta. | #3, #4 |
+| [#6 — explicit top-level project sync](https://github.com/junyoung2015/spaceship-supabase/issues/6) | Ship the small beta.1 explicit `synced:project` path. | #3, #4 |
+| [#7 — security and compatibility coverage](https://github.com/junyoung2015/spaceship-supabase/issues/7) | Prove the beta.1 path remains safe, compatible, fresh, and fast. | #6 |
+| [#8 — provenance and migration docs](https://github.com/junyoung2015/spaceship-supabase/issues/8) | Publish complete implemented beta.1 behavior, privacy, and troubleshooting guidance. | #4, #6, #7 |
+| [#13 — hosted-branch sync](https://github.com/junyoung2015/spaceship-supabase/issues/13) | Later explicit hosted-branch decoration after an exact parent-scoped proof. | #6, #7 |
+| [#14 — guarded prerelease publishing](https://github.com/junyoung2015/spaceship-supabase/issues/14) | Publish `v0.2.0-beta.N` through the full release gate without changing stable releases. | #6, #7, #8 |
+| [#15 — redacted beta acceptance report](https://github.com/junyoung2015/spaceship-supabase/issues/15) | Prepare and later populate board-gated go/extend/pause evidence. | #6, #7, #8, #14 |
+| [#9 — v0.2.0 release](https://github.com/junyoung2015/spaceship-supabase/issues/9) | Dogfood, pass the release gate, tag, and publish the stable release. | #3, #4, #6–#8, #13–#15 |
 
 ### Release acceptance
 
@@ -198,10 +203,13 @@ order without duplicating open/closed state in this document.
   alone while the full ref remains visible;
 - a manual user label has clear precedence over automatic decoration;
 - every automatic name is bound to the currently validated ref;
-- source absence, mismatch, same-ref outdated-name behavior, malformed JSON,
-  unsafe paths, duplicate data, and prompt-control payloads have explicit
-  failure-path tests;
-- hosted branch/environment text is displayed only from a source whose exact
+- the top-level synced-project beta path has passed a tagged prerelease,
+  redacted acceptance report, and the full release gate before broader beta
+  invitations;
+- source absence, mismatch, same-ref outdated-name behavior, unsafe paths,
+  duplicate data, helper-output variants, and prompt-control payloads have
+  explicit failure-path tests;
+- hosted branch text is displayed only after #13 supplies a source whose exact
   semantics are verified and documented;
 - prompt rendering remains local-only, read-only, network-free, CLI-free,
   credential-free, cache-free for identity, and within the release benchmark;
@@ -216,6 +224,8 @@ v0.2 does not promise:
 
 - a network-fresh project name on every prompt;
 - a hosted branch inferred from `supabase/.branches/_current_branch`;
+- use of the undocumented `linked-project.json` telemetry snapshot in v0.2 or
+  the first external beta;
 - a name or branch that can replace the authoritative ref;
 - arbitrary prompt templates, ref truncation, or name-only output;
 - automatic background refresh, prompt-time persistence, or silent credential
