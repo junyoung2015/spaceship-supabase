@@ -6,7 +6,39 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.2.0-beta.2]
+
+### Added
+
+- Prepared the first publishable maintainer-only private-dogfood candidate for
+  `spaceship_supabase_sync project [--yes]`. It saves a user-confirmed,
+  point-in-time `synced:project` decoration only after an exact current
+  live-ref match; the full ref stays visible, a manual label retains precedence,
+  remote-derived text remains opt-in, and prompt rendering performs no CLI,
+  network, credential, parser-process, or write activity.
+
+### Fixed
+
+- Isolated synthetic release candidates from existing annotated tags, so the
+  release gate validates a candidate-owned beta tag even when immutable beta.1
+  exists.
+- Made the explicit CLI capture watchdog honor its full requested timeout on
+  Zsh 5.2 while preserving its bounded output, signal cleanup, and direct-child
+  reaping guarantees.
+
+### Changed
+
+- Superseded beta.1's rejected, unpublished tag run with beta.2. Product scope
+  and external-beta restrictions are unchanged; beta.2 carries only the merged
+  release/test reliability repairs beyond the beta.1-defined `synced:project`
+  behavior above.
+
 ## [0.2.0-beta.1]
+
+> **Historical candidate — not released:** `v0.2.0-beta.1` is an immutable,
+> rejected, unpublished annotated tag. Its release gate failed before GitHub
+> publication, so it must not be installed, retagged, or republished. The
+> `v0.2.0-beta.2` candidate is its successor.
 
 ### Added
 

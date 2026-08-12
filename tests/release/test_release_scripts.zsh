@@ -92,6 +92,36 @@ commit_release_candidate() {
   return 0
 }
 
+prepare_exact_prerelease_candidate() {
+  local candidate="$1"
+  local version="$2"
+  local line=''
+  local heading="## [$version]"
+  local heading_count=0
+
+  # A source checkout may be either the committed beta.2 candidate (CI) or the
+  # preceding beta.1 tree while this metadata change is still uncommitted
+  # locally. Materialize exactly one beta.2 section in the latter case, but
+  # never append a duplicate section in the former.
+  [[ -r "$candidate/CHANGELOG.md" ]] || return 1
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    [[ "$line" == "$heading" ]] && (( heading_count += 1 ))
+  done < "$candidate/CHANGELOG.md"
+  (( heading_count <= 1 )) || return 1
+
+  print -r -- "$version" > "$candidate/VERSION" || return 1
+  if (( heading_count == 0 )); then
+    append_changelog_section "$candidate" "$heading" \
+      'Deterministic beta.2 release-script fixture.' || return 1
+  fi
+
+  command git -C "$candidate" add VERSION CHANGELOG.md || return 1
+  if ! command git -C "$candidate" diff --cached --quiet; then
+    command git -C "$candidate" commit --quiet -m "test: prepare $version release candidate" || return 1
+  fi
+  return 0
+}
+
 mark_candidate_as_main() {
   command git -C "$1" update-ref refs/remotes/origin/main HEAD
 }
@@ -145,7 +175,7 @@ test_stable_and_beta_contract_forms_are_exact() {
 
   actual="$(release_contract_kind v0.1.1 0.1.1)" || test_failure 'stable release contract accepts v0.1.1'
   assert_eq stable "$actual" 'stable release kind remains stable'
-  actual="$(release_contract_kind v0.2.0-beta.1 0.2.0-beta.1)" || test_failure 'beta release contract accepts beta.1'
+  actual="$(release_contract_kind v0.2.0-beta.2 0.2.0-beta.2)" || test_failure 'beta release contract accepts beta.2'
   assert_eq prerelease "$actual" 'valid beta is classified as a prerelease'
 
   assert_failure_silent 'beta.0 is not a positive beta number' \
@@ -155,7 +185,7 @@ test_stable_and_beta_contract_forms_are_exact() {
   assert_failure_silent 'other prerelease channels are rejected' \
     release_contract_kind v0.2.0-rc.1 0.2.0-rc.1
   assert_failure_silent 'tag and VERSION must be identical' \
-    release_contract_kind v0.2.0-beta.2 0.2.0-beta.1
+    release_contract_kind v0.2.0-beta.1 0.2.0-beta.2
   assert_failure_silent 'stable major identifier cannot have a leading zero' \
     release_contract_kind v00.2.3 00.2.3
   assert_failure_silent 'stable minor identifier cannot have a leading zero' \
@@ -187,11 +217,13 @@ test_synthetic_candidates_isolate_existing_release_tags() {
   candidate="$REPLY"
   assert_failure_silent 'candidate does not inherit the source beta.1 tag' \
     command git -C "$candidate" show-ref --verify --quiet refs/tags/v0.2.0-beta.1
-  assert_success 'candidate can create its own annotated beta.1 tag' \
-    create_annotated_tag "$candidate" 'v0.2.0-beta.1'
-  tag_type="$(command git -C "$candidate" cat-file -t refs/tags/v0.2.0-beta.1)" || \
-    test_failure 'candidate beta.1 tag is readable after isolated creation'
-  assert_eq tag "$tag_type" 'candidate beta.1 tag remains annotated'
+  assert_failure_silent 'candidate does not inherit a beta.2 tag' \
+    command git -C "$candidate" show-ref --verify --quiet refs/tags/v0.2.0-beta.2
+  assert_success 'candidate can create its own annotated beta.2 tag' \
+    create_annotated_tag "$candidate" 'v0.2.0-beta.2'
+  tag_type="$(command git -C "$candidate" cat-file -t refs/tags/v0.2.0-beta.2)" || \
+    test_failure 'candidate beta.2 tag is readable after isolated creation'
+  assert_eq tag "$tag_type" 'candidate beta.2 tag remains annotated'
 
   cleanup_release_test_dir "$tmp"
   return 0
@@ -229,7 +261,7 @@ test_valid_prerelease_preflight_and_dry_run() {
   tmp="$REPLY"
   prepare_release_candidate "$tmp" || return 1
   candidate="$REPLY"
-  # The checked-out candidate may itself be beta.1. Use another valid beta
+  # The checked-out candidate may itself be beta.2. Use another valid beta
   # identifier here so this synthetic fixture owns exactly one matching section.
   commit_release_candidate "$candidate" '0.2.0-beta.7' present || return 1
   mark_candidate_as_main "$candidate" || return 1
@@ -290,7 +322,9 @@ test_release_preflight_rejects_tag_and_history_failures() {
   tmp="$REPLY"
   prepare_release_candidate "$tmp" || return 1
   candidate="$REPLY"
-  commit_release_candidate "$candidate" '0.2.0-beta.2' present || return 1
+  # beta.2 is the checked-in candidate, so use a different valid identifier to
+  # isolate this tag/VERSION mismatch fixture from its exact changelog section.
+  commit_release_candidate "$candidate" '0.2.0-beta.8' present || return 1
   mark_candidate_as_main "$candidate" || return 1
   create_annotated_tag "$candidate" 'v0.2.0-beta.3' || return 1
   notes_file="$tmp/mismatch-notes.md"
@@ -343,18 +377,25 @@ test_duplicate_refusal_and_beta_dry_run() {
   source="$REPLY"
   prepare_release_candidate "$tmp" "$source" || return 1
   candidate="$REPLY"
-  assert_failure_silent 'beta candidate does not inherit the published source tag' \
+  assert_failure_silent 'beta.2 candidate does not inherit the source beta.1 tag' \
     command git -C "$candidate" show-ref --verify --quiet refs/tags/v0.2.0-beta.1
-  # Reuse the checked-in beta.1 section. The candidate owns its tag even when
-  # its source fixture models an already-published annotated beta.1 tag.
+  assert_failure_silent 'beta.2 candidate does not inherit its own tag' \
+    command git -C "$candidate" show-ref --verify --quiet refs/tags/v0.2.0-beta.2
+  # Use an exact beta.2 candidate. This is idempotent for a checked-in beta.2
+  # source and materializes that one section for an uncommitted local run.
+  prepare_exact_prerelease_candidate "$candidate" '0.2.0-beta.2' || return 1
+  read_file "$candidate/VERSION"
+  assert_eq '0.2.0-beta.2' "$REPLY" 'candidate VERSION is exactly beta.2'
+  # The candidate owns its tag even when its source fixture models an existing
+  # immutable annotated beta.1 tag.
   mark_candidate_as_main "$candidate" || return 1
-  create_annotated_tag "$candidate" 'v0.2.0-beta.1' || return 1
+  create_annotated_tag "$candidate" 'v0.2.0-beta.2' || return 1
   notes_file="$tmp/notes.md"
-  assert_success 'beta.1 preflight writes its candidate release notes' \
-    run_preflight "$candidate" 'v0.2.0-beta.1' "$notes_file"
-  assert_file_exists "$notes_file" 'beta.1 preflight notes are readable by release creation'
+  assert_success 'beta.2 preflight writes its candidate release notes' \
+    run_preflight "$candidate" 'v0.2.0-beta.2' "$notes_file"
+  assert_file_exists "$notes_file" 'beta.2 preflight notes are readable by release creation'
   read_file "$notes_file"
-  assert_nonempty "$REPLY" 'beta.1 preflight produces non-empty curated notes'
+  assert_nonempty "$REPLY" 'beta.2 preflight produces non-empty curated notes'
   stub_dir="$tmp/bin"
   command mkdir -p "$stub_dir" || return 1
   print -r -- '#!/bin/sh' > "$stub_dir/curl" || return 1
@@ -362,13 +403,13 @@ test_duplicate_refusal_and_beta_dry_run() {
   command chmod 700 "$stub_dir/curl" || return 1
 
   assert_success '404 permits a new beta release' \
-    run_duplicate_check "$candidate" 'v0.2.0-beta.1' 404 "$stub_dir"
+    run_duplicate_check "$candidate" 'v0.2.0-beta.2' 404 "$stub_dir"
   assert_failure_silent '200 refuses a duplicate beta release' \
-    run_duplicate_check "$candidate" 'v0.2.0-beta.1' 200 "$stub_dir"
+    run_duplicate_check "$candidate" 'v0.2.0-beta.2' 200 "$stub_dir"
   assert_failure_silent 'unexpected release API status fails closed' \
-    run_duplicate_check "$candidate" 'v0.2.0-beta.1' 500 "$stub_dir"
+    run_duplicate_check "$candidate" 'v0.2.0-beta.2' 500 "$stub_dir"
 
-  output="$(run_release_create_dry "$candidate" 'v0.2.0-beta.1' "$notes_file")" || \
+  output="$(run_release_create_dry "$candidate" 'v0.2.0-beta.2' "$notes_file")" || \
     test_failure 'beta release dry-run succeeds'
   assert_contains "$output" '--prerelease' 'beta create path includes --prerelease'
   assert_contains "$output" "$notes_file" \
