@@ -60,3 +60,8 @@ This file is the non-negotiable implementation contract for coding agents and co
 - A project name, user label, configured environment, hosted preview branch,
   and local database branch are separate concepts. Keep their provenance and
   precedence explicit in code, tests, diagnostics, and documentation.
+- The accepted v0.2 vocabulary, exact display forms, privacy defaults, manual
+  label precedence, and synced-decoration boundary live in
+  `docs/design/v0.2-target-context-contract.md`. Synced decorations require a
+  separate opt-in provenance store; they must not silently extend or overwrite
+  the manual-label store.

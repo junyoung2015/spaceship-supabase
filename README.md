@@ -19,6 +19,9 @@ context. The current release establishes a truthful full-ref safety baseline,
 with a ref-only default display. The [roadmap](docs/roadmap.md) develops that
 baseline toward human-readable project and environment context without adding
 prompt-time network access or hiding the authoritative ref.
+The planned vocabulary, exact v0.2 prompt forms, privacy defaults, and
+manual-label/synced-decoration precedence are recorded before feature work in
+the [v0.2 target-context contract](docs/design/v0.2-target-context-contract.md).
 
 ## Requirements
 
@@ -187,6 +190,7 @@ The reference displayed in a prompt is not a secret, but it can still identify a
 ## Documentation
 
 - [Product roadmap and planning history](docs/roadmap.md)
+- [v0.2 target-context contract](docs/design/v0.2-target-context-contract.md)
 - [Supabase CLI project-name and target-context research](docs/research/supabase-cli-project-names.md)
 - [Configuration reference](docs/configuration.md)
 - [Data sources and precedence](docs/data-sources.md)
