@@ -1,6 +1,6 @@
 #!/usr/bin/env zsh
 #
-# Small, dependency-free assertions and fixture helpers for the v0.1.0 release
+# Small, dependency-free assertions and fixture helpers for the v0.1 release
 # suite.  Every suite is executed by tests/run.zsh in a fresh `zsh -f` process.
 
 emulate -L zsh

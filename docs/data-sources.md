@@ -74,4 +74,15 @@ The branch is optional decoration, not identity. If its directory or file is abs
 
 ## Unsupported layout
 
-`.supabase/project.json` belongs to Supabase's unreleased next-shell work, not the stable v0.1.0 CLI contract. It is intentionally unsupported for this release. A future opt-in adapter may be considered only after it is part of a stable, documented CLI contract and has equivalent safety coverage.
+`.supabase/project.json` belongs to Supabase's alpha next/V3 shell, not the
+stable v0.1.1 CLI contract. It is intentionally unsupported for this release. A
+future opt-in adapter may be considered only after it is part of a stable,
+documented CLI contract and has equivalent safety coverage.
+
+Recent stable CLI versions also write
+`supabase/.temp/linked-project.json` as best-effort telemetry metadata. v0.1.1
+does not consume it: the file is undocumented as a product interface, has no
+freshness timestamp, may be absent for hosted branch links, and may retain data
+for another ref after relinking. The v0.2 investigation and exact-ref safety
+requirements are documented in the
+[Supabase CLI target-context research](research/supabase-cli-project-names.md).

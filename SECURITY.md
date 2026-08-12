@@ -14,7 +14,7 @@ If the private route is unavailable, do not post the report or technical details
 
 ## Supported versions
 
-Security fixes are provided for the latest released stable version on `main`. During the initial public release, that is v0.1.0. Alpha-era private history and untagged builds are not supported release artifacts.
+Security fixes are provided for the latest published stable version on `main`. A pending version becomes supported only after its annotated tag and GitHub Release are published. Alpha-era private history and untagged builds are not supported release artifacts.
 
 ## Security scope
 

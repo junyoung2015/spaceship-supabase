@@ -29,6 +29,7 @@ suites=(
   tests/unit/test_configuration.zsh
   tests/integration/test_resolution.zsh
   tests/integration/test_labels_and_doctor.zsh
+  tests/integration/test_spaceship_registration.zsh
   tests/negative/test_fail_closed.zsh
   tests/security/test_untrusted_state.zsh
 )
@@ -43,7 +44,10 @@ cleanup() {
     zf_rm -r "$run_dir"
   fi
 }
-trap cleanup EXIT HUP INT TERM
+trap cleanup EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 typeset failed=0
 typeset suite=""

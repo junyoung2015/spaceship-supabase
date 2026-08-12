@@ -96,7 +96,7 @@ The label must be printable ASCII, at most 64 characters, and must not contain `
 
 ## Removed alpha options
 
-v0.1.0 intentionally resets the untagged alpha configuration surface. The following alpha-era options are not public API and must not be relied on:
+v0.1.1 intentionally retains the v0.1 configuration reset. The following alpha-era options are not public API and must not be relied on:
 
 - source toggles such as `SPACESHIP_SUPABASE_USE_PROJECT_REF` and `SPACESHIP_SUPABASE_USE_CONFIG_TOML`;
 - cache controls such as `SPACESHIP_SUPABASE_USE_CACHE`, `SPACESHIP_SUPABASE_CACHE_FILE`, and `SPACESHIP_SUPABASE_CACHE_TTL`;

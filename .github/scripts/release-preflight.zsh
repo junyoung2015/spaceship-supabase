@@ -18,7 +18,11 @@ fail() {
 tag=$1
 [[ "$tag" =~ ^v[0-9]+[.][0-9]+[.][0-9]+$ ]] || fail 'tag must use the vX.Y.Z stable SemVer form'
 
-zsh -f "$repo_root/.github/scripts/metadata-check.zsh"
+# A release preflight always operates on the publishable tree. Keep this
+# invariant inside the script so every caller, including the final publish
+# recheck, rejects private-only paths without relying on workflow-local env.
+SPACESHIP_SUPABASE_REQUIRE_PUBLIC_TREE=true \
+  zsh -f "$repo_root/.github/scripts/metadata-check.zsh"
 
 version=$(<VERSION)
 [[ "$tag" == "v$version" ]] || fail "tag $tag does not match VERSION $version"
@@ -29,7 +33,12 @@ tag_type=$(git cat-file -t "$tag_object")
 [[ "$tag_type" == tag ]] || fail "tag $tag must be annotated"
 commit=$(git rev-parse "$tag^{commit}") || fail "tag $tag does not resolve to a commit"
 
-git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main >/dev/null 2>&1 || fail 'could not fetch origin/main'
+# actions/checkout with fetch-depth: 0 already supplies origin/main. Reuse that
+# authenticated checkout state: persisted credentials are intentionally disabled
+# for this release gate, so an unnecessary second fetch fails for private repos.
+if ! git show-ref --verify --quiet refs/remotes/origin/main; then
+  git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main >/dev/null 2>&1 || fail 'could not fetch origin/main'
+fi
 git merge-base --is-ancestor "$commit" origin/main || fail "tag $tag is not reachable from main"
 
 notes=$(awk -v heading="## [$version]" -v version="$version" '

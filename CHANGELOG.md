@@ -6,6 +6,24 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+### Added
+
+- Added an outcome-driven v0.2 roadmap centered on recognizable project and environment context, with GitHub Issues replacing the archived BMad backlog as the active progress tracker.
+- Added a primary-source Supabase CLI research report covering local project-name metadata, hosted/local branch semantics, refresh options, and compatibility risks.
+- Added an accepted v0.2 target-context contract that fixes the product vocabulary, exact prompt forms, privacy defaults, manual-label precedence, and synced-decoration provenance before feature code begins.
+
+### Fixed
+
+- Required strict public-tree auditing inside every release-preflight invocation, including the final publication recheck.
+- Made the canonical test runner exit immediately with conventional status codes after `HUP`, `INT`, or `TERM` while retaining temporary-directory cleanup.
+
+## [0.1.1] - 2026-08-10
+
+### Fixed
+
+- Documented the required, idempotent Spaceship prompt-order registration for the external `supabase` section.
+- Added an end-to-end integration test that loads the real vendored Spaceship v4 runtime, applies the documented registration guard, prevents duplicate registration, and renders the linked project reference through the composed prompt path.
+
 ## [0.1.0] - 2026-08-10
 
 ### Added

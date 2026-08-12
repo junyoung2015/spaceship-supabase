@@ -51,7 +51,7 @@ This is not live link state. A valid `supabase/.temp/project-ref` always takes p
 
 ## The prompt looks like it has a hosted branch
 
-It should not. v0.1.0 never uses `ref@branch`. If you opt in to local database branch display:
+It should not. v0.1.1 never uses `ref@branch`. If you opt in to local database branch display:
 
 ```zsh
 SPACESHIP_SUPABASE_SHOW_LOCAL_DB_BRANCH=true
@@ -98,10 +98,29 @@ print -r -- "$ZSH_VERSION"
 
 Zsh 5.2 or later is required.
 
+## The plugin loads, but its segment is never part of the prompt
+
+Spaceship renders only sections named in `SPACESHIP_PROMPT_ORDER`. After
+sourcing this plugin, register it once before the prompt character:
+
+```zsh
+if (( ${SPACESHIP_PROMPT_ORDER[(Ie)supabase]} == 0 )); then
+  spaceship add --before char supabase
+fi
+```
+
+Keep that guard after both your Spaceship source line and this plugin's source
+line. It is safe to evaluate on every shell start. Do not use an unguarded
+`spaceship add` line: it adds another `supabase` entry each time the file is
+sourced.
+
 ## Debugging without leaking state
 
 Set `SPACESHIP_SUPABASE_DEBUG=true` temporarily to enable fixed diagnostic codes. Debug output intentionally omits raw paths, file contents, config lines, labels, and malformed values. Do not add `set -x`, `eval`, a TOML source command, or arbitrary parser output to your prompt configuration: those defeat the section's trust boundary.
 
 ## Unsupported layouts
 
-The stable v0.1.0 contract does not support `.supabase/project.json`. That path belongs to unreleased next-shell work and is intentionally not interpreted. See [compatibility](compatibility.md) for the supported layout and future-adapter policy.
+The stable v0.1.1 contract does not support `.supabase/project.json`. That path
+belongs to the alpha next/V3 shell rather than the stable release channel and is
+intentionally not interpreted. See [compatibility](compatibility.md) for the
+supported layout and future-adapter policy.

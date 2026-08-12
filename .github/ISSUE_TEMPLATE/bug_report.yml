@@ -36,7 +36,7 @@ body:
     attributes:
       label: Environment
       description: Zsh, Spaceship Prompt, plugin, Supabase CLI (if installed), and OS versions.
-      placeholder: zsh 5.9; Spaceship v4; spaceship-supabase v0.1.0; macOS 15
+      placeholder: zsh 5.9; Spaceship v4; spaceship-supabase v0.1.1; macOS 15
   - type: textarea
     id: safe_output
     attributes:
