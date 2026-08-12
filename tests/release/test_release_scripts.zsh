@@ -17,9 +17,12 @@ release_contract_kind() {
 
 prepare_release_candidate() {
   local parent="$1"
+  local source_repo="${2:-$TEST_REPO_ROOT}"
   local candidate="$parent/repo"
 
-  command git clone --quiet --no-hardlinks --local "$TEST_REPO_ROOT" "$candidate" || return 1
+  # Test candidates create their own annotated tags. Never inherit an already
+  # published tag from the checkout that supplied the source tree.
+  command git clone --quiet --no-hardlinks --local --no-tags "$source_repo" "$candidate" || return 1
   command git -C "$candidate" config user.name 'Release script test' || return 1
   command git -C "$candidate" config user.email 'release-script-test@example.invalid' || return 1
   # GitHub Actions checks out PRs at a shallow detached commit, so a local
@@ -37,6 +40,21 @@ prepare_release_candidate() {
   done
 
   REPLY="$candidate"
+  return 0
+}
+
+prepare_tagged_release_source() {
+  local parent="$1"
+  local source="$parent/source"
+
+  # Start without source tags so this fixture remains reproducible after the
+  # real beta.1 tag exists in the checkout running the suite.
+  command git clone --quiet --no-hardlinks --local --no-tags "$TEST_REPO_ROOT" "$source" || return 1
+  command git -C "$source" config user.name 'Release source fixture' || return 1
+  command git -C "$source" config user.email 'release-source-fixture@example.invalid' || return 1
+  command git -C "$source" tag -a 'v0.2.0-beta.1' -m 'Existing annotated release fixture' || return 1
+
+  REPLY="$source"
   return 0
 }
 
@@ -151,6 +169,31 @@ test_stable_and_beta_contract_forms_are_exact() {
   assert_failure_silent 'beta patch identifier cannot have a leading zero' \
     release_contract_kind v0.2.03-beta.1 0.2.03-beta.1
 
+  return 0
+}
+
+test_synthetic_candidates_isolate_existing_release_tags() {
+  local tmp='' source='' candidate='' tag_type=''
+  new_test_dir || return 1
+  tmp="$REPLY"
+  prepare_tagged_release_source "$tmp" || return 1
+  source="$REPLY"
+
+  tag_type="$(command git -C "$source" cat-file -t refs/tags/v0.2.0-beta.1)" || \
+    test_failure 'source fixture creates an annotated beta.1 tag'
+  assert_eq tag "$tag_type" 'source fixture beta.1 tag is annotated'
+
+  prepare_release_candidate "$tmp" "$source" || return 1
+  candidate="$REPLY"
+  assert_failure_silent 'candidate does not inherit the source beta.1 tag' \
+    command git -C "$candidate" show-ref --verify --quiet refs/tags/v0.2.0-beta.1
+  assert_success 'candidate can create its own annotated beta.1 tag' \
+    create_annotated_tag "$candidate" 'v0.2.0-beta.1'
+  tag_type="$(command git -C "$candidate" cat-file -t refs/tags/v0.2.0-beta.1)" || \
+    test_failure 'candidate beta.1 tag is readable after isolated creation'
+  assert_eq tag "$tag_type" 'candidate beta.1 tag remains annotated'
+
+  cleanup_release_test_dir "$tmp"
   return 0
 }
 
@@ -293,13 +336,17 @@ test_release_preflight_rejects_tag_and_history_failures() {
 }
 
 test_duplicate_refusal_and_beta_dry_run() {
-  local tmp='' candidate='' notes_file='' output='' stub_dir=''
+  local tmp='' source='' candidate='' notes_file='' output='' stub_dir=''
   new_test_dir || return 1
   tmp="$REPLY"
-  prepare_release_candidate "$tmp" || return 1
+  prepare_tagged_release_source "$tmp" || return 1
+  source="$REPLY"
+  prepare_release_candidate "$tmp" "$source" || return 1
   candidate="$REPLY"
-  # Reuse the checked-out beta.1 candidate and its exact checked-in section.
-  # This models the actual release tree rather than appending a duplicate heading.
+  assert_failure_silent 'beta candidate does not inherit the published source tag' \
+    command git -C "$candidate" show-ref --verify --quiet refs/tags/v0.2.0-beta.1
+  # Reuse the checked-in beta.1 section. The candidate owns its tag even when
+  # its source fixture models an already-published annotated beta.1 tag.
   mark_candidate_as_main "$candidate" || return 1
   create_annotated_tag "$candidate" 'v0.2.0-beta.1' || return 1
   notes_file="$tmp/notes.md"
@@ -332,6 +379,7 @@ test_duplicate_refusal_and_beta_dry_run() {
 }
 
 test_case 'stable and constrained beta release identifiers are exact' test_stable_and_beta_contract_forms_are_exact
+test_case 'synthetic candidates isolate existing release tags' test_synthetic_candidates_isolate_existing_release_tags
 test_case 'valid stable preflight retains stable creation behavior' test_valid_stable_preflight_and_dry_run
 test_case 'valid beta preflight reaches prerelease creation dry-run' test_valid_prerelease_preflight_and_dry_run
 test_case 'preflight extracts only the literal matching beta changelog section' test_preflight_extracts_only_the_exact_beta_section
