@@ -1092,10 +1092,7 @@ _spaceship_supabase_capture_cli_output() {
   # Keep a fixed cap independent of the parser's smaller per-command limit.
   # `ulimit -f` measures 512-byte blocks, so this is exactly 1 MiB.
   local -i capture_file_blocks=2048 capture_poll_centiseconds=10
-  local -i capture_kill_grace_centiseconds=10
-  # A function-local SECONDS timer cannot be inherited from or changed by the
-  # caller. It is the direct-child watchdog's fixed wall-clock budget.
-  local -i SECONDS=0
+  local -i capture_kill_grace_centiseconds=10 capture_timeout_polls=0
   shift 3 || return 1
 
   REPLY=''
@@ -1104,6 +1101,12 @@ _spaceship_supabase_capture_cli_output() {
   REPLY=''
   [[ $limit == [0-9]## ]] && (( limit >= 1 && limit <= 131072 )) || return 4
   [[ $timeout_seconds == [0-9]## ]] && (( timeout_seconds >= 1 && timeout_seconds <= 15 )) || return 4
+  # Zsh 5.2 rounds an integer SECONDS reset down to a wall-clock second, so a
+  # `SECONDS=0` watchdog can expire before its requested duration. The fixed
+  # 100ms zselect poll gives this explicit helper ten timeout credits per
+  # second; consume a credit only after a real poll timeout. Scheduler delay
+  # may make the wall-clock duration longer, never shorter.
+  (( capture_timeout_polls = timeout_seconds * 10 ))
   # This explicit helper needs zsh/files for secure cleanup and zsh/system for
   # descriptor-only I/O. Load zsh/zselect here, not during normal plugin setup:
   # its bounded direct-child poller is never part of prompt rendering.
@@ -1209,10 +1212,6 @@ _spaceship_supabase_capture_cli_output() {
         cleanup_status=3
         break
       fi
-      if (( SECONDS >= timeout_seconds )); then
-        cleanup_status=1
-        break
-      fi
       builtin zselect -t "$capture_poll_centiseconds" 2>/dev/null
       poll_status=$?
       if (( interrupted != 0 )); then
@@ -1224,6 +1223,16 @@ _spaceship_supabase_capture_cli_output() {
       if (( poll_status != 0 && poll_status != 1 )); then
         cleanup_status=1
         break
+      fi
+      if (( poll_status == 1 )); then
+        (( capture_timeout_polls-- ))
+        # If the direct child completed during the final poll, preserve the
+        # normal wait-and-read path instead of reporting a timeout after it
+        # has already exited.
+        if (( capture_timeout_polls <= 0 )) && builtin kill -0 "$child_pid" 2>/dev/null; then
+          cleanup_status=1
+          break
+        fi
       fi
     done
     (( cleanup_status == -1 )) || break
