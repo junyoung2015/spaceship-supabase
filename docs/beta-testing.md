@@ -1,17 +1,23 @@
 # Beta testing
 
-Every beta is an immutable annotated Git tag. Use a reviewed tag such as
-`v0.2.0-beta.1`; do not install a branch tip, `main`, or a mutable “latest”
-reference. Beta releases exercise the same full release gate as stable releases
-but are marked as GitHub prereleases, so they do not replace the latest stable
-release.
+Every published beta is an immutable annotated Git tag. Do not install a branch
+tip, `main`, or a mutable “latest” reference. Beta releases exercise the same
+full release gate as stable releases but are marked as GitHub prereleases, so
+they do not replace the latest stable release.
+
+`v0.2.0-beta.1` is an immutable, rejected, unpublished tag: its tag-triggered
+release gate failed before GitHub publication. Do not install, retag, or
+republish it. `v0.2.0-beta.2` is the sole successor candidate for
+maintainer-only private dogfood. Use the commands below only after its reviewed
+annotated tag has passed the release gate and a GitHub prerelease exists.
 
 ## Install or move to a reviewed beta
 
-For a new installation, pin the exact tag while cloning:
+For a new installation after beta.2 is published, pin the exact tag while
+cloning:
 
 ```zsh
-release_tag='v0.2.0-beta.1'
+release_tag='v0.2.0-beta.2'
 git clone --depth 1 --branch "$release_tag" https://github.com/junyoung2015/spaceship-supabase.git \
   "$HOME/.local/share/spaceship-supabase"
 ```
@@ -20,7 +26,7 @@ For an existing clone, inspect the exact tag before checking it out:
 
 ```zsh
 plugin_dir="$HOME/.local/share/spaceship-supabase"
-release_tag='v0.2.0-beta.1'
+release_tag='v0.2.0-beta.2'
 
 git -C "$plugin_dir" fetch --tags --prune origin
 git -C "$plugin_dir" show --no-patch --format=fuller "$release_tag"

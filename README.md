@@ -13,19 +13,22 @@
 
 That default segment means a valid local linked-project reference was found beneath the current project boundary. It does **not** automatically claim a friendly project name, a hosted Supabase Branch, remote status, credentials, network freshness, or the state of a deployment. The full 20-character reference is always shown so the prompt remains unambiguous.
 
-The `v0.2.0-beta.1` prerelease can save one explicitly confirmed, point-in-time
+The `v0.2.0-beta.2` candidate carries one explicitly confirmed, point-in-time
 project-name decoration after a user runs a command. It remains off by default,
 keeps the full ref visible, says `synced:project`, and never does a remote
-lookup while a prompt is drawn. This immutable prerelease is for
-maintainer-only private dogfood: it is not a stable release and does not
-authorize external or phase-2-alpha invitations.
+lookup while a prompt is drawn. It may be used for maintainer-only private
+dogfood only after its reviewed annotated tag has passed the release gate and
+published a GitHub prerelease; it is not a stable release and does not authorize
+external or phase-2-alpha invitations. The earlier `v0.2.0-beta.1` tag is
+immutable but rejected and unpublished, so it must not be installed or reused.
 
 The project started from a practical safety need: Supabase commands can mutate
 a hosted target while the terminal provides no persistent, recognizable target
 context. The stable `v0.1.1` release establishes a truthful full-ref safety
-baseline, with a ref-only default display. The `v0.2.0-beta.1` private-dogfood
-prerelease builds on that baseline without adding prompt-time network access or
-hiding the authoritative ref. The accepted vocabulary, exact v0.2 prompt
+baseline, with a ref-only default display. The `v0.2.0-beta.2` private-dogfood
+candidate carries the beta.1-defined behavior without adding prompt-time network
+access or hiding the authoritative ref. Its only additional scope is the merged
+release/test reliability repair. The accepted vocabulary, exact v0.2 prompt
 forms, privacy defaults, and manual-label/synced-decoration precedence are
 recorded in the [v0.2 target-context contract](docs/design/v0.2-target-context-contract.md).
 
@@ -34,7 +37,7 @@ recorded in the [v0.2 target-context contract](docs/design/v0.2-target-context-c
 - Zsh 5.2 or later.
 - Spaceship Prompt v4. The release suite uses Spaceship v4.21.0.
 - A project linked by a stable Supabase CLI release, with `supabase/config.toml` and a valid `supabase/.temp/project-ref` where live identity should be displayed.
-- Only for the explicit `v0.2.0-beta.1` sync helper: an installed, authenticated Supabase CLI that can list the intended project. It is not required for normal prompt rendering.
+- Only for the explicit v0.2 beta sync helper: an installed, authenticated Supabase CLI that can list the intended project. It is not required for normal prompt rendering.
 
 No Supabase CLI executable, network access, credential lookup, Node, Python, or jq is used while a prompt is rendered.
 
@@ -115,11 +118,13 @@ exec zsh
 Replace `v0.1.1` only after reviewing the next release's notes and tag. While
 the repository is private, these commands require authenticated GitHub read
 access. To roll back, check out a previous reviewed tag with the same command.
-`v0.2.0-beta.1` is an immutable tag for maintainer-only private dogfood; its
-existence does not authorize an external beta, phase-2-alpha invitations, or
-the Dongtan-report decision. Use a reviewed beta tag—not a branch—and follow
-the exact [beta install, rollback, verification, and feedback
-steps](docs/beta-testing.md).
+`v0.2.0-beta.1` is immutable but rejected and unpublished; do not install,
+retag, or republish it. `v0.2.0-beta.2` is the sole successor candidate for
+maintainer-only private dogfood and may be used only after its reviewed
+annotated tag has published a GitHub prerelease. It does not authorize an
+external beta, phase-2-alpha invitations, or the Dongtan-report decision. Use
+a reviewed beta tag—not a branch—and follow the exact [beta install, rollback,
+verification, and feedback steps](docs/beta-testing.md).
 
 ## Quick verification
 
@@ -193,12 +198,12 @@ When there is no valid live `project-ref`, the deliberately non-authoritative ou
 
 A live `project-ref` always wins. The top-level `project_id` in `config.toml` is never interpreted as a hosted project reference.
 
-### Explicit synced project name — v0.2.0-beta.1 private dogfood
+### Explicit synced project name — v0.2 private dogfood
 
-The normal prompt never calls Supabase or exposes a remote project name. When
-using the reviewed `v0.2.0-beta.1` private-dogfood tag, you can deliberately
-discover the name for the **current live ref** and save it as a separate,
-point-in-time decoration:
+The normal prompt never calls Supabase or exposes a remote project name. After
+the reviewed `v0.2.0-beta.2` annotated tag has published a GitHub prerelease,
+maintainer-private dogfood can deliberately discover the name for the **current
+live ref** and save it as a separate, point-in-time decoration:
 
 ```zsh
 spaceship_supabase_sync project

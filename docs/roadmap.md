@@ -14,9 +14,12 @@ another command-specific override can still direct an operation elsewhere.
 ## Current status
 
 - Current stable release: `v0.1.1`.
-- Private-dogfood release target: `v0.2.0-beta.1`. The release process permits
-  publication only as an annotated tag; it is neither a stable release nor
-  approval for external or phase-2-alpha invitations.
+- Historical beta.1 result: `v0.2.0-beta.1` is an immutable, rejected,
+  unpublished tag. Its tag release gate failed before GitHub publication, so it
+  must not be installed, retagged, or republished.
+- Private-dogfood release candidate: `v0.2.0-beta.2`. The release process may
+  publish it only as a reviewed annotated tag; it is neither a stable release
+  nor approval for external or phase-2-alpha invitations.
 - Active product milestone: [`v0.2.0`](https://github.com/junyoung2015/spaceship-supabase/milestone/1)
   — human-readable target context.
 - Active work tracker: the GitHub Issues mapped below and assigned to that
@@ -153,35 +156,37 @@ name.
    branch`, and `local database branch`; it also fixes the readable forms,
    privacy defaults, and decoration precedence. Feature work does not reopen
    those semantics without a new product decision.
-2. **Keep beta.1 enrichment narrow.** The `v0.2.0-beta.1` private-dogfood
-   target implements [#6](https://github.com/junyoung2015/spaceship-supabase/issues/6):
+2. **Keep the beta.1-defined enrichment narrow.** The `v0.2.0-beta.2`
+   candidate carries [#6](https://github.com/junyoung2015/spaceship-supabase/issues/6):
    an explicit, user-confirmed top-level project sync that matches only the
    current valid live ref through a user-invoked Supabase CLI action and saves a
    separate provenance-aware `synced:project` decoration. It never overwrites a
-   manual label and never runs from prompt rendering.
-3. **Retain proof that beta.1 cannot weaken the prompt.**
+   manual label and never runs from prompt rendering. beta.2 adds no customer
+   feature beyond this scope.
+3. **Retain proof that the beta candidate cannot weaken the prompt.**
    [#7](https://github.com/junyoung2015/spaceship-supabase/issues/7) provides
    the fake-CLI boundary, separate-state, actual Spaceship v4 injection,
    cross-version, freshness, and performance tests. [#8](https://github.com/junyoung2015/spaceship-supabase/issues/8)
    promotes only implemented behavior into public reference docs.
 4. **Keep prerelease publication reviewable before inviting anyone.**
    [#14](https://github.com/junyoung2015/spaceship-supabase/issues/14) provides
-   the guarded annotated `v0.2.0-beta.N` prerelease path. The `v0.2.0-beta.1`
-   tag is maintainer-private dogfood only. [#15](https://github.com/junyoung2015/spaceship-supabase/issues/15)
+   the guarded annotated `v0.2.0-beta.N` prerelease path. beta.1 is rejected
+   and unpublished; beta.2 is the sole maintainer-private-dogfood candidate.
+   [#15](https://github.com/junyoung2015/spaceship-supabase/issues/15)
    provides the redacted go/extend/pause evidence structure; its working term
    “Dongtan report” remains undefined until the board supplies the audience,
    access, confidentiality, security-route, and approval decisions.
 5. **Treat hosted-branch display as later, separate scope.**
    [#13](https://github.com/junyoung2015/spaceship-supabase/issues/13) begins
-   only after top-level beta.1 proves the decoration model. It requires a
+   only after top-level private dogfood proves the decoration model. It requires a
    user-supplied parent ref and one exact remote branch-project-ref match. No
    local database branch, Git branch, config name, or project-name guess may
    masquerade as a hosted branch.
 6. **Keep the telemetry snapshot out of the beta.**
    [#5](https://github.com/junyoung2015/spaceship-supabase/issues/5) is a
    deliberate no-go for `linked-project.json` in v0.2 and the first external
-   beta. The prompt continues to use manual labels and beta.1's explicit
-   confirmed sync record instead.
+   beta. The prompt continues to use manual labels and the explicit confirmed
+   sync record instead.
 
 ### GitHub issue map
 
@@ -193,13 +198,14 @@ order without duplicating open/closed state in this document.
 | [#3 — CLI name and branch research](https://github.com/junyoung2015/spaceship-supabase/issues/3) | Verify stable local and explicit-refresh sources. | — |
 | [#4 — target-context UX](https://github.com/junyoung2015/spaceship-supabase/issues/4) | Define truthful vocabulary, display, privacy, and precedence. | #3 |
 | [#5 — linked project-name decoration spike](https://github.com/junyoung2015/spaceship-supabase/issues/5) | Closed no-go: do not consume undocumented telemetry state in v0.2 or the first external beta. | #3, #4 |
-| [#6 — explicit top-level project sync](https://github.com/junyoung2015/spaceship-supabase/issues/6) | Implement the small beta.1 explicit `synced:project` path. | #3, #4 |
-| [#7 — security and compatibility coverage](https://github.com/junyoung2015/spaceship-supabase/issues/7) | Prove the beta.1 path remains safe, compatible, fresh, and fast. | #6 |
-| [#8 — provenance and migration docs](https://github.com/junyoung2015/spaceship-supabase/issues/8) | Publish the complete implemented beta.1 behavior, privacy, and troubleshooting guidance. | #4, #6, #7 |
+| [#6 — explicit top-level project sync](https://github.com/junyoung2015/spaceship-supabase/issues/6) | Implement the small v0.2 explicit `synced:project` path. | #3, #4 |
+| [#7 — security and compatibility coverage](https://github.com/junyoung2015/spaceship-supabase/issues/7) | Prove the explicit sync path remains safe, compatible, fresh, and fast. | #6 |
+| [#8 — provenance and migration docs](https://github.com/junyoung2015/spaceship-supabase/issues/8) | Publish the implemented v0.2 behavior, privacy, and troubleshooting guidance. | #4, #6, #7 |
 | [#13 — hosted-branch sync](https://github.com/junyoung2015/spaceship-supabase/issues/13) | Later explicit hosted-branch decoration after an exact parent-scoped proof. | #6, #7 |
 | [#14 — guarded prerelease publishing](https://github.com/junyoung2015/spaceship-supabase/issues/14) | Publish `v0.2.0-beta.N` through the full release gate without changing stable releases. | #6, #7, #8 |
 | [#15 — redacted beta acceptance report](https://github.com/junyoung2015/spaceship-supabase/issues/15) | Prepare and later populate board-gated go/extend/pause evidence. | #6, #7, #8, #14 |
-| [#19 — v0.2.0-beta.1 private dogfood prerelease](https://github.com/junyoung2015/spaceship-supabase/issues/19) | Cut one immutable prerelease without authorizing external beta testing or changing stable availability. | #6–#8, #14 |
+| [#19 — v0.2.0-beta.1 private dogfood prerelease](https://github.com/junyoung2015/spaceship-supabase/issues/19) | Historical rejected/unpublished beta.1 candidate; preserve its failed-gate evidence and do not retag or publish it. | #6–#8, #14 |
+| [#25 — v0.2.0-beta.2 private dogfood prerelease](https://github.com/junyoung2015/spaceship-supabase/issues/25) | Cut the successor candidate with only merged release/test reliability fixes; no new customer feature or external-beta approval. | #6–#8, #14, #19 |
 | [#9 — v0.2.0 release](https://github.com/junyoung2015/spaceship-supabase/issues/9) | Dogfood, pass the release gate, tag, and publish the stable release. | #3, #4, #6–#8, #13–#15 |
 
 ### Release acceptance
