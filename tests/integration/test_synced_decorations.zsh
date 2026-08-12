@@ -927,23 +927,26 @@ test_cli_capture_watchdog_bounds_resistant_and_silent_children() {
 
   # A quiet process cannot cross the output limit. The same direct-child
   # poller therefore reaches its fixed local timeout and cleans up without
-  # depending on output or an external timeout program.
+  # depending on output or an external timeout program. A two-second test
+  # budget also proves Zsh 5.2 cannot expire this watchdog at the next
+  # wall-clock boundary before all twenty 100ms polls have elapsed.
   pid_file="$tmp/silent-cli.pid"
   SPACESHIP_TEST_SUPABASE_PID_FILE="$pid_file"
   SPACESHIP_TEST_SUPABASE_HANG_IGNORE_XFSZ=''
   SPACESHIP_TEST_SUPABASE_HANG_SILENT=true
   export SPACESHIP_TEST_SUPABASE_PID_FILE SPACESHIP_TEST_SUPABASE_HANG_IGNORE_XFSZ SPACESHIP_TEST_SUPABASE_HANG_SILENT
   started=$EPOCHREALTIME
-  _spaceship_supabase_capture_cli_output "$root" 64 1 projects list --output-format json >"$output_file" 2>"$error_file"
+  _spaceship_supabase_capture_cli_output "$root" 64 2 projects list --output-format json >"$output_file" 2>"$error_file"
   command_status=$?
   finished=$EPOCHREALTIME
   elapsed=$(( finished - started ))
   assert_eq 1 "$command_status" 'silent CLI fails after the private fixed capture timeout'
-  # Container scheduling can delay a one-second test helper beyond its normal
+  # Container scheduling can delay a two-second test helper beyond its normal
   # wall-clock budget. Its fixed failure status plus direct-child reaping
   # below prove the internal watchdog fired; this broad outer bound merely
   # prevents a future unbounded wait from stalling the focused suite.
   (( elapsed < 30.0 )) || test_failure 'silent CLI reaches the bounded local timeout without hanging the suite'
+  (( elapsed >= 1.5 )) || test_failure 'silent CLI honors the full private two-second capture budget'
   assert_empty "$REPLY" 'silent CLI returns no output'
   assert_file_exists "$pid_file" 'silent CLI records its direct child pid'
   if [[ -s $pid_file ]]; then
