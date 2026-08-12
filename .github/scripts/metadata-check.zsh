@@ -4,10 +4,11 @@
 emulate -LR zsh
 setopt errexit nounset pipefail
 
-typeset script_dir repo_root version doc line release_heading release_date
+typeset script_dir repo_root version release_kind doc line release_heading release_date
 script_dir=${0:A:h}
 repo_root=$(git -C "$script_dir" rev-parse --show-toplevel)
 cd -- "$repo_root"
+source "$script_dir/release-contract.zsh"
 
 fail() {
   print -u2 -r -- "metadata: $1"
@@ -28,7 +29,9 @@ for doc in \
 done
 
 version=$(<VERSION)
-[[ "$version" =~ ^[0-9]+[.][0-9]+[.][0-9]+$ ]] || fail 'VERSION must contain an unprefixed stable SemVer value (for example 0.1.0)'
+release_contract_version_kind "$version" || \
+  fail 'VERSION must contain X.Y.Z or the constrained prerelease form X.Y.Z-beta.N'
+release_kind="$REPLY"
 [[ "$(wc -l < VERSION)" -eq 1 ]] || fail 'VERSION must be exactly one line'
 grep -Fq 'Keep a Changelog' CHANGELOG.md || fail 'CHANGELOG.md must use the Keep a Changelog format'
 grep -qxF '## [Unreleased]' CHANGELOG.md || fail 'CHANGELOG.md must retain an exact ## [Unreleased] heading'
@@ -81,4 +84,4 @@ done
 
 zsh -f "$repo_root/.github/scripts/public-tree-audit.zsh"
 
-print -r -- "metadata: VERSION $version and public documentation contract are valid"
+print -r -- "metadata: $release_kind VERSION $version and public documentation contract are valid"

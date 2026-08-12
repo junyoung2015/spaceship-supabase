@@ -90,7 +90,7 @@ either installation route, make configuration assignments before the next
 prompt is drawn. The section can be loaded once and reconfigured in the current
 shell.
 
-### Manual private dogfooding and updates
+### Tagged updates, private dogfooding, and rollback
 
 v0.1.1 deliberately has no auto-updater or `curl | sh` installer. A prompt
 plugin runs in your interactive shell, so use an explicit release tag that you
@@ -108,6 +108,9 @@ exec zsh
 Replace `v0.1.1` only after reviewing the next release's notes and tag. While
 the repository is private, these commands require authenticated GitHub read
 access. To roll back, check out a previous reviewed tag with the same command.
+For an external beta, use its immutable `vX.Y.Z-beta.N` tag—not a branch—and
+follow the exact [beta install, rollback, verification, and feedback
+steps](docs/beta-testing.md).
 
 ## Quick verification
 
@@ -198,6 +201,7 @@ The reference displayed in a prompt is not a secret, but it can still identify a
 - [Troubleshooting](docs/troubleshooting.md)
 - [Compatibility](docs/compatibility.md)
 - [Testing](docs/testing.md)
+- [Beta testing, rollback, and feedback](docs/beta-testing.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security policy](SECURITY.md)
 - [Support](SUPPORT.md)
