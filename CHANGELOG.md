@@ -6,6 +6,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.2.0-beta.3]
+
 ### Fixed
 
 - Accepted the current stable `supabase projects list --output-format json`
@@ -13,7 +15,20 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
   synced-project helper. The parser remains bounded and fail-closed for
   unknown, duplicate, malformed, or nonempty companion fields.
 
+### Changed
+
+- Superseded the published `v0.2.0-beta.2` maintainer-private prerelease for
+  current-style project-name sync. beta.3 adds no product scope beyond that
+  compatibility repair and retains every private-dogfood and external-beta
+  restriction.
+
 ## [0.2.0-beta.2]
+
+> **Historical prerelease — superseded for current-style sync:**
+> `v0.2.0-beta.2` is an immutable published prerelease. Its bounded helper
+> correctly failed closed on the stable current-style CLI envelope, so it must
+> not be retagged or relied upon for that sync path. `v0.2.0-beta.3` is the
+> successor candidate.
 
 ### Added
 
