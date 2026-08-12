@@ -186,24 +186,28 @@ test_valid_prerelease_preflight_and_dry_run() {
   tmp="$REPLY"
   prepare_release_candidate "$tmp" || return 1
   candidate="$REPLY"
-  commit_release_candidate "$candidate" '0.2.0-beta.1' present || return 1
+  # The checked-out candidate may itself be beta.1. Use another valid beta
+  # identifier here so this synthetic fixture owns exactly one matching section.
+  commit_release_candidate "$candidate" '0.2.0-beta.7' present || return 1
   mark_candidate_as_main "$candidate" || return 1
-  create_annotated_tag "$candidate" 'v0.2.0-beta.1' || return 1
+  create_annotated_tag "$candidate" 'v0.2.0-beta.7' || return 1
   notes_file="$tmp/notes.md"
 
   assert_success 'valid beta tag passes the complete local preflight' \
-    run_preflight "$candidate" 'v0.2.0-beta.1' "$notes_file"
+    run_preflight "$candidate" 'v0.2.0-beta.7' "$notes_file"
   assert_file_exists "$notes_file" 'preflight writes curated beta notes'
   read_file "$notes_file"
   assert_contains "$REPLY" 'Deterministic beta release-script fixture.' \
     'preflight extracts the exact beta changelog section'
 
-  output="$(run_release_create_dry "$candidate" 'v0.2.0-beta.1' "$notes_file")" || \
+  output="$(run_release_create_dry "$candidate" 'v0.2.0-beta.7' "$notes_file")" || \
     test_failure 'beta release dry-run succeeds after preflight'
   assert_contains "$output" 'release create dry-run: prerelease' \
     'beta release dry-run selects the prerelease channel'
   assert_contains "$output" '--prerelease' \
     'beta release dry-run passes --prerelease to gh release create'
+  assert_contains "$output" "$notes_file" \
+    'beta release dry-run receives the preflight-generated notes file'
   assert_contains "$output" 'release' \
     'beta release dry-run reaches the gh release create command shape'
 
@@ -288,17 +292,22 @@ test_release_preflight_rejects_tag_and_history_failures() {
   return 0
 }
 
-test_duplicate_refusal_and_stable_dry_run() {
+test_duplicate_refusal_and_beta_dry_run() {
   local tmp='' candidate='' notes_file='' output='' stub_dir=''
   new_test_dir || return 1
   tmp="$REPLY"
   prepare_release_candidate "$tmp" || return 1
   candidate="$REPLY"
-  commit_release_candidate "$candidate" '0.2.0-beta.1' present || return 1
+  # Reuse the checked-out beta.1 candidate and its exact checked-in section.
+  # This models the actual release tree rather than appending a duplicate heading.
   mark_candidate_as_main "$candidate" || return 1
   create_annotated_tag "$candidate" 'v0.2.0-beta.1' || return 1
   notes_file="$tmp/notes.md"
-  print -r -- 'notes' > "$notes_file" || return 1
+  assert_success 'beta.1 preflight writes its candidate release notes' \
+    run_preflight "$candidate" 'v0.2.0-beta.1' "$notes_file"
+  assert_file_exists "$notes_file" 'beta.1 preflight notes are readable by release creation'
+  read_file "$notes_file"
+  assert_nonempty "$REPLY" 'beta.1 preflight produces non-empty curated notes'
   stub_dir="$tmp/bin"
   command mkdir -p "$stub_dir" || return 1
   print -r -- '#!/bin/sh' > "$stub_dir/curl" || return 1
@@ -315,16 +324,8 @@ test_duplicate_refusal_and_stable_dry_run() {
   output="$(run_release_create_dry "$candidate" 'v0.2.0-beta.1' "$notes_file")" || \
     test_failure 'beta release dry-run succeeds'
   assert_contains "$output" '--prerelease' 'beta create path includes --prerelease'
-
-  output="$(GITHUB_REPOSITORY='example/spaceship-supabase' \
-    RELEASE_NOTES_FILE="$notes_file" \
-    SPACESHIP_SUPABASE_RELEASE_DRY_RUN=true \
-    "$RELEASE_TEST_ZSH" -f "$RELEASE_CREATE" v0.1.1)" || \
-    test_failure 'stable release dry-run succeeds'
-  assert_contains "$output" 'release create dry-run: stable' \
-    'stable path remains classified as stable'
-  assert_not_contains "$output" '--prerelease' \
-    'stable release command remains unchanged without --prerelease'
+  assert_contains "$output" "$notes_file" \
+    'beta create path receives the preflight-generated notes file'
 
   cleanup_release_test_dir "$tmp"
   return 0
@@ -335,5 +336,5 @@ test_case 'valid stable preflight retains stable creation behavior' test_valid_s
 test_case 'valid beta preflight reaches prerelease creation dry-run' test_valid_prerelease_preflight_and_dry_run
 test_case 'preflight extracts only the literal matching beta changelog section' test_preflight_extracts_only_the_exact_beta_section
 test_case 'preflight rejects mismatched, lightweight, non-main, and missing-note tags' test_release_preflight_rejects_tag_and_history_failures
-test_case 'duplicate refusal and stable release command behavior are retained' test_duplicate_refusal_and_stable_dry_run
+test_case 'duplicate refusal and beta release command behavior are retained' test_duplicate_refusal_and_beta_dry_run
 finish_tests

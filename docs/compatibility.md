@@ -2,7 +2,7 @@
 
 ## Supported environment
 
-v0.1.1 supports:
+The stable `v0.1.1` release supports:
 
 - Zsh 5.2 and later;
 - Spaceship Prompt v4 through the `spaceship::section::v4` interface; the audited test dependency is v4.21.0;
@@ -11,9 +11,11 @@ v0.1.1 supports:
 
 The section does not invoke the CLI at prompt time. Fixture versions therefore validate the on-disk contract, not an executable dependency or a claim that every CLI command is supported.
 
-The unreleased v0.2 beta `spaceship_supabase_sync project` helper is the one
-explicit exception to the no-CLI prompt rule: it requires an installed CLI only
-when a user invokes it. Its compatibility path is deliberately narrow:
+`v0.2.0-beta.1` is a maintainer-only private-dogfood prerelease, not a stable
+or external-beta approval. It retains the supported environment above and adds
+the `spaceship_supabase_sync project` helper as the one explicit exception to
+the no-CLI prompt rule: it requires an installed CLI only when a user invokes
+it. Its compatibility path is deliberately narrow:
 
 - v2.72.7-style CLI output uses `supabase projects list --output json` and a
   JSON array;
@@ -43,7 +45,7 @@ The optional `supabase/.branches/_current_branch` input is a local database-bran
 
 An unsupported, malformed, unreadable, oversized, symlinked, or ambiguous **identity-critical** root/config/live-ref layout is not a compatibility fallback. It renders no segment. This is a security property: a terminal prompt must not turn arbitrary filesystem bytes into trusted context. The local-db branch is optional decoration: an unsafe branch file is omitted while an independently valid live ref remains visible.
 
-The v0.2 beta intentionally does not support:
+The `v0.2.0-beta.1` private-dogfood prerelease intentionally does not support:
 
 - `.supabase/project.json`, which belongs to the alpha next/V3 shell rather than
   the stable CLI contract;
@@ -57,8 +59,9 @@ The v0.2 beta intentionally does not support:
 A `.supabase/project.json` adapter is deferred. It can be considered only as an explicit opt-in after Supabase publishes a stable, documented contract and this project can give it the same bounded parsing, symlink protections, fail-closed behavior, and test coverage as the current stable layout. Until then, do not create a symlink or compatibility shim to make the section consume it.
 
 An adapter for stable CLI telemetry metadata at
-`supabase/.temp/linked-project.json` is not part of v0.1.1 and is a deliberate
-v0.2/first-external-beta no-go. Although recent stable versions write the file,
+`supabase/.temp/linked-project.json` is not part of `v0.1.1` or
+`v0.2.0-beta.1` and is a deliberate v0.2/first-external-beta no-go. Although
+recent stable versions write the file,
 it is an undocumented, best-effort name snapshot with no freshness timestamp
 rather than identity authority. Reconsider it only after Supabase publishes a
 stable documented metadata contract and the project records a new product

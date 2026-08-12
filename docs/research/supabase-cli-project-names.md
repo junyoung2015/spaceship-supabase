@@ -2,7 +2,7 @@
 
 - **Status:** research input for the `spaceship-supabase` v0.2 roadmap
 - **Tracking:** [GitHub issue #3](https://github.com/junyoung2015/spaceship-supabase/issues/3)
-- **Decision update:** [#5](https://github.com/junyoung2015/spaceship-supabase/issues/5) records a no-go for consuming `linked-project.json` in v0.2 and its first external beta. The explicit top-level project sync in [#6](https://github.com/junyoung2015/spaceship-supabase/issues/6) remains the only planned remote-derived beta.1 decoration source; hosted-branch sync is separately deferred to [#13](https://github.com/junyoung2015/spaceship-supabase/issues/13).
+- **Decision update:** [#5](https://github.com/junyoung2015/spaceship-supabase/issues/5) records a no-go for consuming `linked-project.json` in v0.2 and its first external beta. The explicit top-level project sync in [#6](https://github.com/junyoung2015/spaceship-supabase/issues/6) is the only remote-derived beta.1 decoration source implemented in `v0.2.0-beta.1`; hosted-branch sync is separately deferred to [#13](https://github.com/junyoung2015/spaceship-supabase/issues/13).
 - **As of:** 2026-08-11
 - **CLI snapshots inspected:** `v2.72.7`, locally installed `v2.111.0`, and latest stable `v2.113.0`
 - **Primary-source policy:** this report uses only Supabase's official
@@ -225,16 +225,15 @@ accessible to the logged-in user. [official Management API reference](https://su
 
 **Recommendation:** never execute this command from `spaceship_supabase` rendering. Doing so would add unpredictable latency, credential access, network failure, rate-limit exposure, and side effects to every prompt. It would also violate the project's existing local-only and read-only renderer contract.
 
-### 3.3 Safe explicit refresh design
+### 3.3 Implemented explicit refresh design
 
-An explicit helper is feasible because it runs on user request rather than during rendering. The planned beta.1 surface in [#6](https://github.com/junyoung2015/spaceship-supabase/issues/6) is intentionally narrower than this research originally proposed:
+An explicit helper is feasible because it runs on user request rather than during rendering. The `v0.2.0-beta.1` beta.1 surface implemented in [#6](https://github.com/junyoung2015/spaceship-supabase/issues/6) is intentionally narrower than this research originally proposed:
 
 ```text
 spaceship_supabase_sync project [--yes]
 ```
 
-It is not implemented by this research document. When implemented, the helper
-should:
+The implemented helper:
 
 1. Resolve the same safe root and exact current live ref as the renderer.
 2. Refuse to operate without a currently valid live ref.
@@ -257,9 +256,9 @@ Save this point-in-time synced decoration? [y/N]
 ```
 
 That preserves the useful human name without implying background freshness or
-overwriting the user's label vocabulary. The future display opt-in remains
-separate from the helper confirmation. Hosted-branch mapping remains later
-scope in [#13](https://github.com/junyoung2015/spaceship-supabase/issues/13).
+overwriting the user's label vocabulary. The display opt-in remains separate
+from the helper confirmation. Hosted-branch mapping remains later scope in
+[#13](https://github.com/junyoung2015/spaceship-supabase/issues/13).
 
 ## 4. Local database branches and hosted Supabase Branches are different
 
@@ -440,14 +439,14 @@ These constraints are especially important if names are introduced: a slow or un
 
 This immediately solves the recognition problem for all supported CLI versions, including `v2.72.7` and hosted branch refs with no metadata cache.
 
-**Recommended Stage B — explicit remote-name sync (the beta.1 slice):**
+**Delivered Stage B — explicit remote-name sync (the `v0.2.0-beta.1` slice):**
 
-- add a user-invoked helper only after its state schema and parser are threat-modeled;
-- use `projects list` for top-level project names;
-- preview and store a timestamped synced decoration separately from manual labels after explicit confirmation;
-- never refresh automatically from prompt rendering;
-- make staleness visible in `doctor`/`list`, not necessarily in every prompt;
-- require exact ref equality at lookup and display time.
+- provides a user-invoked helper after its state schema and parser are threat-modeled;
+- uses `projects list` for top-level project names;
+- previews and stores a timestamped synced decoration separately from manual labels after explicit confirmation;
+- never refreshes automatically from prompt rendering;
+- makes staleness visible in `doctor`/`list`, not necessarily in every prompt; and
+- requires exact ref equality at lookup and display time.
 
 ### 7.4 Hosted branch names need a separate feature gate
 
@@ -497,7 +496,7 @@ Any implementation following this research should extend the release suite with 
 - Do not read `.supabase/project.json` in stable-path tests.
 - If a future adapter is added, gate it by an explicitly supported stable CLI version and test schema/lifecycle migration separately.
 
-## 9. Open questions before implementing automatic names
+## 9. Open questions after beta.1
 
 1. **Resolved for beta.1: what does the first sync helper write?**
 
@@ -533,7 +532,7 @@ Any implementation following this research should extend the release suite with 
 8. **What is the supported CLI-version floor for explicit top-level discovery?**
 
    Manual labels work across the entire plugin support range. The beta.1 helper
-   can support `v2.72.7` through `v2.113.0` if it handles both `projects list`
+   supports `v2.72.7` through `v2.113.0` by handling both `projects list`
    output flags and JSON envelope variants. It does not read
    `linked-project.json`.
 
@@ -550,7 +549,7 @@ The research supports recording these decisions directly in the v0.2 milestone:
 - **Accepted:** `supabase/.temp/project-ref` remains the stable local identity source for the current compatibility range.
 - **Accepted:** `_current_branch` is local database state and remains labeled `local-db:`.
 - **Accepted:** no CLI, network, credential, or write work enters prompt rendering.
-- **Accepted beta.1 implementation scope:** explicit top-level project-name discovery via `supabase projects list`, exact live-ref matching, confirmation, and a separate `synced:project` record. [#6](https://github.com/junyoung2015/spaceship-supabase/issues/6) defines the public helper and failure boundary.
+- **Delivered in `v0.2.0-beta.1`:** explicit top-level project-name discovery via `supabase projects list`, exact live-ref matching, confirmation, and a separate `synced:project` record. [#6](https://github.com/junyoung2015/spaceship-supabase/issues/6) defines the public helper and failure boundary.
 - **No-go for v0.2 and first external beta:** do not consume `linked-project.json`; [#5](https://github.com/junyoung2015/spaceship-supabase/issues/5) records the parser, staleness, compatibility, privacy, and support rationale.
 - **Deferred:** hosted branch names until exact branch-ref mapping is proven with a bounded primary API workflow.
 - **Deferred:** `.supabase/project.json` until it becomes a stable, documented CLI contract.
