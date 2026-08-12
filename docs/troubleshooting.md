@@ -86,6 +86,41 @@ spaceship_supabase_label list
 
 `set` and `clear` require a live `project-ref`, not merely a configured mapping. Labels cannot bring back a segment when a reference disappears. See [labels](labels.md).
 
+## I want to recognize the current project by its Supabase name
+
+The normal prompt deliberately does not fetch a remote name. With a reviewed
+v0.2 beta tag, run the explicit helper from a safely linked project:
+
+```zsh
+spaceship_supabase_sync project
+```
+
+It previews the exact name-plus-ref form and asks before writing a separate
+synced-decoration record. Use `spaceship_supabase_sync project --yes` only
+when an intentional non-interactive confirmation is appropriate. The helper
+requires a current valid live ref; a config-only mapping cannot be synced.
+
+Saving succeeds without changing prompt privacy. To display a valid saved
+snapshot, opt in to both settings:
+
+```zsh
+SPACESHIP_SUPABASE_FORMAT="label+ref"
+SPACESHIP_SUPABASE_USE_SYNCED_DECORATIONS=true
+```
+
+The resulting marker is `synced:project`, which means an explicit lookup was
+saved earlier—not that the name is remotely fresh now. A manual label wins in
+the prompt; clear it to reveal an independently valid synced record. A synced
+record never decorates `configured:<remote>` output and cannot recover a
+missing or changed live identity.
+
+If the helper reports a fixed `SYNC_*` code, do not paste raw CLI output,
+credentials, or project files into an issue. The common safe actions are to
+verify the live link, update/authenticate the installed CLI using your normal
+workflow, retry from the intended root, and inspect the redacted doctor output.
+`spaceship_supabase_doctor --verbose` can report validated sync kind, source,
+and saved-at state without showing the remote-derived name.
+
 ## The plugin does not load
 
 The section must be sourced after Spaceship Prompt v4. In a generic shell, source Spaceship first and then `spaceship-supabase.plugin.zsh`. In Oh My Zsh, source the section after `source "$ZSH/oh-my-zsh.sh"` has loaded the Spaceship theme. See the [installation examples](../README.md#install).

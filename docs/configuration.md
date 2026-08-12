@@ -14,11 +14,13 @@ Put settings in `.zshrc`, preferably before your prompt is first drawn. All prom
 | `SPACESHIP_SUPABASE_SYMBOL` | `"🔷 "` | User-owned text | Symbol placed before the validated section value. |
 | `SPACESHIP_SUPABASE_PREFIX` | `""` | User-owned text | Prefix supplied to Spaceship. |
 | `SPACESHIP_SUPABASE_SUFFIX` | `"$SPACESHIP_PROMPT_DEFAULT_SUFFIX"` | User-owned text | Suffix supplied to Spaceship. |
-| `SPACESHIP_SUPABASE_FORMAT` | `ref` | `ref` or `label+ref` | Chooses the bare full reference or a safe local label followed by the full reference. |
+| `SPACESHIP_SUPABASE_FORMAT` | `ref` | `ref` or `label+ref` | Chooses the bare full reference or a safe decoration followed by the full reference. `label+ref` is required before any manual or synced human-readable text can render. |
 | `SPACESHIP_SUPABASE_SHOW_LOCAL_DB_BRANCH` | `false` | `true` or `false` | When enabled, appends a validated `local-db:<name>` marker from the local database-branch file to a live ref only. |
 | `SPACESHIP_SUPABASE_CONFIG_REMOTE` | empty | A remote selector matching `[A-Za-z0-9][A-Za-z0-9._-]{0,63}` | Explicitly selects one `[remotes.<name>]` mapping as a non-authoritative fallback. |
 | `SPACESHIP_SUPABASE_USE_LABELS` | `true` | `true` or `false` | Enables reading a valid local label for `label+ref` output. It never changes identity selection. |
 | `SPACESHIP_SUPABASE_LABEL_FILE` | `${XDG_STATE_HOME:-$HOME/.local/state}/spaceship-supabase/labels.tsv` | An absolute owner-controlled local path | Location of the manual label store. It is read during rendering only when labels are enabled; writes happen only through explicit helpers. |
+| `SPACESHIP_SUPABASE_USE_SYNCED_DECORATIONS` | `false` | `true` or `false` | Explicit opt-in before a separately stored, remote-derived synced project name may render in `label+ref` mode. It never changes identity selection or invokes a CLI. |
+| `SPACESHIP_SUPABASE_SYNCED_DECORATION_FILE` | `${XDG_STATE_HOME:-$HOME/.local/state}/spaceship-supabase/decorations.tsv` | An absolute owner-controlled local path | Location of the separate synced-decoration store. Rendering reads it only when the synced switch and `label+ref` are enabled; only `spaceship_supabase_sync` writes it. |
 | `SPACESHIP_SUPABASE_DEBUG` | `false` | `true` or `false` | Enables fixed, redacted diagnostic codes. It never prints raw paths, source lines, labels, or file contents. |
 
 `SUPABASE_WORKDIR` is an upstream Supabase work-directory override that the section honors. When it is set, it is resolved relative to the current directory if necessary and is the **only** directory inspected. An invalid or unsafe override renders no segment; it never falls back to the current directory.
@@ -37,7 +39,7 @@ SPACESHIP_SUPABASE_FORMAT="ref"
 🔷 abcdefghijklmnopqrst
 ```
 
-The only alternative retains the exact reference and adds a local safe label:
+The only alternative retains the exact reference and permits a safe decoration:
 
 ```zsh
 SPACESHIP_SUPABASE_FORMAT="label+ref"
@@ -47,7 +49,7 @@ SPACESHIP_SUPABASE_FORMAT="label+ref"
 🔷 Production (abcdefghijklmnopqrst)
 ```
 
-The label is optional: if it is absent, invalid, disabled, or unavailable, the resolved full reference remains the identity-bearing value. See [labels](labels.md).
+The label is optional: if it is absent, invalid, disabled, or unavailable, the resolved full reference remains the identity-bearing value. An opted-in synced decoration may appear only when there is no matching manual label; see [labels and local state](labels.md).
 
 ## Local database-branch marker
 
@@ -93,6 +95,35 @@ spaceship_supabase_label set "Production"
 ```
 
 The label must be printable ASCII, at most 64 characters, and must not contain `%`, tabs, newlines, or control characters. It is never used as a project target, cache entry, or fallback identity. See [labels](labels.md) for command behavior and local-state protections.
+
+## Explicit synced project decoration — v0.2 beta
+
+The only remote-capable flow is the explicit, user-invoked helper below. It is
+not part of prompt rendering and does not modify shell configuration:
+
+```zsh
+spaceship_supabase_sync project
+spaceship_supabase_sync project --yes
+```
+
+The helper first requires a current safe root and live ref, then calls the
+installed Supabase CLI to find exactly one matching top-level project record.
+It previews the exact `synced:project` display and asks for confirmation unless
+`--yes` was supplied. A cancellation, unsafe/malformed result, CLI failure,
+identity change, or unsafe state path leaves no synced-state change.
+
+After a successful explicit save, both settings below are still required before
+the validated saved name may enter a prompt:
+
+```zsh
+SPACESHIP_SUPABASE_FORMAT="label+ref"
+SPACESHIP_SUPABASE_USE_SYNCED_DECORATIONS=true
+```
+
+The decoration is a timestamped snapshot, not a refresh policy or remote
+freshness claim. A manual label wins visibly, and a synced record cannot
+decorate a configured mapping or revive a missing live ref. The documented
+state location is separate from the manual-label file by design.
 
 ## Removed alpha options
 
