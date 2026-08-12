@@ -30,7 +30,8 @@ An unsupported, malformed, unreadable, oversized, symlinked, or ambiguous **iden
 
 v0.1.1 intentionally does not support:
 
-- `.supabase/project.json`, which belongs to unreleased next-shell work rather than the stable CLI contract;
+- `.supabase/project.json`, which belongs to the alpha next/V3 shell rather than
+  the stable CLI contract;
 - hosted-branch inference from the local database branch file;
 - automatic config remote selection or top-level `project_id` fallback;
 - remote API or CLI enrichment during a prompt render;
@@ -39,6 +40,14 @@ v0.1.1 intentionally does not support:
 ## Future adapters
 
 A `.supabase/project.json` adapter is deferred. It can be considered only as an explicit opt-in after Supabase publishes a stable, documented contract and this project can give it the same bounded parsing, symlink protections, fail-closed behavior, and test coverage as the current stable layout. Until then, do not create a symlink or compatibility shim to make the section consume it.
+
+An adapter for stable CLI telemetry metadata at
+`supabase/.temp/linked-project.json` is also not part of v0.1.1. Although recent
+stable versions write the file, it is an undocumented, best-effort name
+snapshot with no freshness timestamp rather than identity authority. Any v0.2
+experiment must remain optional, bind the embedded ref exactly to the validated
+live ref, retain the full ref, and fall back independently. See the
+[primary-source research report](research/supabase-cli-project-names.md).
 
 ## Report a compatibility issue
 

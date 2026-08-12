@@ -13,6 +13,13 @@
 
 That segment means a valid local linked-project reference was found beneath the current project boundary. It does **not** claim a friendly project name, a hosted Supabase Branch, remote status, credentials, network freshness, or the state of a deployment. The full 20-character reference is always shown so the prompt remains unambiguous.
 
+The project started from a practical safety need: Supabase commands can mutate
+a hosted target while the terminal provides no persistent, recognizable target
+context. The current release establishes a truthful full-ref safety baseline,
+with a ref-only default display. The [roadmap](docs/roadmap.md) develops that
+baseline toward human-readable project and environment context without adding
+prompt-time network access or hiding the authoritative ref.
+
 ## Requirements
 
 - Zsh 5.2 or later.
@@ -179,6 +186,8 @@ The reference displayed in a prompt is not a secret, but it can still identify a
 
 ## Documentation
 
+- [Product roadmap and planning history](docs/roadmap.md)
+- [Supabase CLI project-name and target-context research](docs/research/supabase-cli-project-names.md)
 - [Configuration reference](docs/configuration.md)
 - [Data sources and precedence](docs/data-sources.md)
 - [Labels and local state](docs/labels.md)

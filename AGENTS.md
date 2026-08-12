@@ -46,3 +46,17 @@ This file is the non-negotiable implementation contract for coding agents and co
 - Preserve actual Spaceship v4 rendering coverage for prompt-injection cases.
 - Update README, configuration, data-source, label, troubleshooting, compatibility, testing, changelog, and release metadata when a public behavior changes.
 - Preserve historical planning artifacts with superseded notices; do not edit them to make invalid alpha assumptions look current.
+
+## Planning and compatibility evidence
+
+- `docs/roadmap.md` defines durable product direction. GitHub milestones and
+  issues are the authoritative active backlog and progress state.
+- The initial-plan and BMad phases are historical inputs, not executable
+  requirements. Do not revive an archived story without a current GitHub issue
+  that reconciles it with the released product contract.
+- External compatibility claims require a primary-source report under
+  `docs/research/`, pinned synthetic fixtures where applicable, and links from
+  the implementing issue or pull request.
+- A project name, user label, configured environment, hosted preview branch,
+  and local database branch are separate concepts. Keep their provenance and
+  precedence explicit in code, tests, diagnostics, and documentation.
