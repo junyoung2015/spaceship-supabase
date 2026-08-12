@@ -40,6 +40,15 @@ The suite verifies behavior rather than xtrace-derived coverage percentages. Cri
 - labels cannot revive an identity and their helper commands preserve privacy, permissions, and atomic update behavior; and
 - prompt rendering makes no writes, network calls, Supabase CLI calls, Python/Node/jq calls, or credential reads.
 
+For the v0.2 beta synced-project slice, the maintained integration suite also
+uses a controlled fake `supabase` executable **only** in explicit-helper tests.
+It covers the v2.72.7 JSON array and current `projects` envelope, exact-ref
+matching, default confirmation and `--yes`, manual-label independence and
+precedence, redacted error paths, malformed/oversized streaming output, child
+cleanup, ref recheck before write, owner-only atomic state, and no-live-ref
+short-circuiting. It proves that unsafe state and fake-CLI payloads cannot
+reach actual Spaceship v4 rendering.
+
 The suite also checks every documented default and supported option. It deliberately does not impose a numeric xtrace coverage threshold: explicit critical failure-path cases are the release gate.
 
 ## Fixtures
@@ -55,7 +64,12 @@ The repository ignores root-local `/supabase/` and `/.supabase/` state without i
 
 ## Performance policy
 
-The optional benchmark builds a valid live stable-layout fixture and performs five independent batches of 100 renders. On Linux, the release policy requires a median P99 below 5 ms and a maximum P99 below 15 ms. macOS reports samples without enforcing those timing thresholds. CI publishes the samples in its summary.
+The optional benchmark builds a valid live stable-layout fixture and performs
+five independent batches of 100 renders for both the ref-only baseline and an
+enabled `label+ref` plus matching `synced:project` decoration. On Linux, each
+scenario must keep a median P99 below 5 ms and a maximum P99 below 15 ms.
+macOS reports samples without enforcing those timing thresholds. CI publishes
+the samples in its summary.
 
 The direct live path is intentionally cache-free and contains no external process invocation. If a benchmark regresses, investigate filesystem safety checks and renderer integration before introducing stale render caching.
 

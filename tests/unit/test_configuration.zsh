@@ -32,9 +32,12 @@ test_documented_defaults() {
   assert_eq '' "$SPACESHIP_SUPABASE_CONFIG_REMOTE" 'configured mapping is opt-in'
   assert_eq true "$SPACESHIP_SUPABASE_USE_LABELS" 'labels are enabled by default'
   assert_eq "$tmp/state/spaceship-supabase/labels.tsv" "$SPACESHIP_SUPABASE_LABEL_FILE" 'label path follows XDG state home'
+  assert_eq false "$SPACESHIP_SUPABASE_USE_SYNCED_DECORATIONS" 'synced decorations require explicit prompt opt-in'
+  assert_eq "$tmp/state/spaceship-supabase/decorations.tsv" "$SPACESHIP_SUPABASE_SYNCED_DECORATION_FILE" 'synced-decoration path follows XDG state home'
   assert_eq false "$SPACESHIP_SUPABASE_DEBUG" 'DEBUG defaults to false'
   (( $+functions[spaceship_supabase] )) || test_failure 'main Spaceship section is defined'
   (( $+functions[spaceship_supabase_label] )) || test_failure 'label helper is defined'
+  (( $+functions[spaceship_supabase_sync] )) || test_failure 'explicit sync helper is defined'
   (( $+functions[spaceship_supabase_doctor] )) || test_failure 'doctor helper is defined'
   (( $+functions[spaceship::section::v4] )) || test_failure 'actual Spaceship v4 section API is available'
 

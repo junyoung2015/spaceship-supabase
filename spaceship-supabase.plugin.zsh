@@ -21,7 +21,7 @@ fi
 
 # These are shell modules, not external programs.  zsh/stat is required for
 # the fail-closed filesystem checks; zsh/files and zsh/system are used only by
-# explicit label-management helpers, never while rendering a prompt.
+# explicit helpers, never while rendering a prompt.
 typeset -g _SPACESHIP_SUPABASE_STAT_READY=true
 zmodload zsh/stat 2>/dev/null || _SPACESHIP_SUPABASE_STAT_READY=false
 typeset -g _SPACESHIP_SUPABASE_FILES_READY=true
@@ -47,6 +47,8 @@ SPACESHIP_SUPABASE_SHOW_LOCAL_DB_BRANCH="${SPACESHIP_SUPABASE_SHOW_LOCAL_DB_BRAN
 SPACESHIP_SUPABASE_CONFIG_REMOTE="${SPACESHIP_SUPABASE_CONFIG_REMOTE-}"
 SPACESHIP_SUPABASE_USE_LABELS="${SPACESHIP_SUPABASE_USE_LABELS-true}"
 SPACESHIP_SUPABASE_LABEL_FILE="${SPACESHIP_SUPABASE_LABEL_FILE-${XDG_STATE_HOME:-$HOME/.local/state}/spaceship-supabase/labels.tsv}"
+SPACESHIP_SUPABASE_USE_SYNCED_DECORATIONS="${SPACESHIP_SUPABASE_USE_SYNCED_DECORATIONS-false}"
+SPACESHIP_SUPABASE_SYNCED_DECORATION_FILE="${SPACESHIP_SUPABASE_SYNCED_DECORATION_FILE-${XDG_STATE_HOME:-$HOME/.local/state}/spaceship-supabase/decorations.tsv}"
 SPACESHIP_SUPABASE_DEBUG="${SPACESHIP_SUPABASE_DEBUG-false}"
 
 # This association carries only the current render's validated values.  It is
@@ -61,9 +63,14 @@ _spaceship_supabase_debug() {
   # Never echo a path, a config line, a label, or any other untrusted value.
   case ${1-} in
     ROOT_INVALID|ROOT_NOT_FOUND|STATE_INVALID|CONFIG_INVALID|LABEL_STORE_INVALID|\
+    SYNCED_DECORATION_STORE_INVALID|\
     LOCAL_DB_BRANCH_INVALID|\
     UNSUPPORTED_FORMAT|RENDERER_UNAVAILABLE|NO_LIVE_REF|LABEL_INVALID|\
-    LABEL_WRITE_FAILED|HELPER_USAGE)
+    LABEL_WRITE_FAILED|SYNC_USAGE|SYNC_NO_LIVE_REF|SYNC_CLI_NOT_FOUND|\
+    SYNC_CLI_VERSION_UNSUPPORTED|SYNC_CLI_FAILED|SYNC_OUTPUT_INVALID|\
+    SYNC_NO_MATCH|SYNC_AMBIGUOUS_MATCH|SYNC_NAME_INVALID|SYNC_CANCELLED|\
+    SYNC_DECORATION_STORE_INVALID|SYNC_WRITE_FAILED|SYNC_REF_CHANGED|\
+    SYNC_TIME_UNAVAILABLE|HELPER_USAGE)
       print -ru2 -- "spaceship-supabase: ${1}"
       ;;
   esac
@@ -482,10 +489,10 @@ _spaceship_supabase_parse_config_remote() {
   (( seen == 1 )) && [[ -n $REPLY ]]
 }
 
-_spaceship_supabase_label_file_path() {
+_spaceship_supabase_private_state_file_path() {
   emulate -L zsh
 
-  local configured=${SPACESHIP_SUPABASE_LABEL_FILE-}
+  local configured=${1-}
   local parent physical_parent name
 
   REPLY=''
@@ -524,26 +531,60 @@ _spaceship_supabase_label_file_path() {
   REPLY="$parent/$name"
 }
 
-_spaceship_supabase_label_store_status() {
+_spaceship_supabase_label_file_path() {
   emulate -L zsh
 
-  local label_file parent
+  _spaceship_supabase_private_state_file_path "${SPACESHIP_SUPABASE_LABEL_FILE-}"
+}
+
+_spaceship_supabase_synced_decoration_file_path() {
+  emulate -L zsh
+
+  _spaceship_supabase_private_state_file_path "${SPACESHIP_SUPABASE_SYNCED_DECORATION_FILE-}"
+}
+
+_spaceship_supabase_private_store_status() {
+  emulate -L zsh
+
+  local state_file=${1-}
+  local parent
 
   REPLY='invalid'
-  _spaceship_supabase_label_file_path || return 1
-  label_file=$REPLY
-  parent=${label_file:h}
+  [[ -n $state_file && $state_file == /* ]] || return 1
+  parent=${state_file:h}
   _spaceship_supabase_lstat_exists "$parent" || {
     REPLY='absent'
     return 2
   }
   _spaceship_supabase_safe_private_directory "$parent" || return 1
-  _spaceship_supabase_lstat_exists "$label_file" || {
+  _spaceship_supabase_lstat_exists "$state_file" || {
     REPLY='absent'
     return 2
   }
-  _spaceship_supabase_safe_private_file "$label_file" || return 1
+  _spaceship_supabase_safe_private_file "$state_file" || return 1
   REPLY='available'
+}
+
+_spaceship_supabase_label_store_status() {
+  emulate -L zsh
+
+  local label_file
+
+  REPLY='invalid'
+  _spaceship_supabase_label_file_path || return 1
+  label_file=$REPLY
+  _spaceship_supabase_private_store_status "$label_file"
+}
+
+_spaceship_supabase_synced_decoration_store_status() {
+  emulate -L zsh
+
+  local decoration_file
+
+  REPLY='invalid'
+  _spaceship_supabase_synced_decoration_file_path || return 1
+  decoration_file=$REPLY
+  _spaceship_supabase_private_store_status "$decoration_file"
 }
 
 _spaceship_supabase_doctor_label_store_state() {
@@ -552,6 +593,21 @@ _spaceship_supabase_doctor_label_store_state() {
   REPLY='disabled'
   [[ ${SPACESHIP_SUPABASE_USE_LABELS-} == true ]] || return 0
   _spaceship_supabase_label_store_status
+  case $? in
+    0) REPLY='available' ;;
+    2) REPLY='absent' ;;
+    *) REPLY='invalid' ;;
+  esac
+  return 0
+}
+
+_spaceship_supabase_doctor_synced_decoration_store_state() {
+  emulate -L zsh
+
+  # Doctor is an explicit local diagnostic, not prompt rendering. It may report
+  # redacted state health even when the separate prompt-display opt-in is off.
+  REPLY='invalid'
+  _spaceship_supabase_synced_decoration_store_status
   case $? in
     0) REPLY='available' ;;
     2) REPLY='absent' ;;
@@ -636,6 +692,720 @@ _spaceship_supabase_read_label() {
   _spaceship_supabase_validate_label "$REPLY"
 }
 
+_spaceship_supabase_validate_synced_decoration_kind() {
+  emulate -L zsh
+
+  REPLY=''
+  [[ ${1-} == project ]] || return 1
+  REPLY=project
+}
+
+_spaceship_supabase_validate_synced_decoration_source() {
+  emulate -L zsh
+
+  REPLY=''
+  [[ ${1-} == 'supabase-cli:projects-list' ]] || return 1
+  REPLY='supabase-cli:projects-list'
+}
+
+_spaceship_supabase_parse_synced_decoration_record() {
+  emulate -L zsh
+
+  local line=${1-}
+  local tab=$'\t'
+  local version ref kind project_name source timestamp rest
+
+  REPLY=''
+  [[ $line == *"$tab"* ]] || return 1
+  version=${line%%"${tab}"*}
+  rest=${line#*"${tab}"}
+  [[ $rest == *"$tab"* ]] || return 1
+  ref=${rest%%"${tab}"*}
+  rest=${rest#*"${tab}"}
+  [[ $rest == *"$tab"* ]] || return 1
+  kind=${rest%%"${tab}"*}
+  rest=${rest#*"${tab}"}
+  [[ $rest == *"$tab"* ]] || return 1
+  project_name=${rest%%"${tab}"*}
+  rest=${rest#*"${tab}"}
+  [[ $rest == *"$tab"* ]] || return 1
+  source=${rest%%"${tab}"*}
+  timestamp=${rest#*"${tab}"}
+  [[ $timestamp != *"$tab"* ]] || return 1
+
+  [[ $version == v1 ]] || return 1
+  _spaceship_supabase_validate_ref "$ref" || return 1
+  ref=$REPLY
+  _spaceship_supabase_validate_synced_decoration_kind "$kind" || return 1
+  kind=$REPLY
+  _spaceship_supabase_validate_label "$project_name" || return 1
+  project_name=$REPLY
+  _spaceship_supabase_validate_synced_decoration_source "$source" || return 1
+  source=$REPLY
+  _spaceship_supabase_validate_timestamp "$timestamp" || return 1
+  timestamp=$REPLY
+  REPLY="$ref$tab$kind$tab$project_name$tab$source$tab$timestamp"
+}
+
+_spaceship_supabase_read_synced_decoration() {
+  emulate -L zsh
+
+  local target_ref=${1-}
+  local decoration_file line encoded record_ref tab=$'\t'
+  local -i read_status matches=0
+
+  REPLY=''
+  _spaceship_supabase_validate_ref "$target_ref" || return 1
+  target_ref=$REPLY
+  _spaceship_supabase_synced_decoration_store_status || return 1
+  [[ $REPLY == available ]] || return 1
+  _spaceship_supabase_synced_decoration_file_path || return 1
+  decoration_file=$REPLY
+
+  while true; do
+    line=''
+    IFS= read -r line
+    read_status=$?
+    if (( read_status != 0 && ${#line} == 0 )); then
+      break
+    fi
+
+    _spaceship_supabase_parse_synced_decoration_record "$line" || {
+      (( read_status == 0 )) || break
+      continue
+    }
+    encoded=$REPLY
+    record_ref=${encoded%%"${tab}"*}
+    if [[ $record_ref == "$target_ref" ]]; then
+      (( matches++ ))
+      REPLY=$encoded
+    fi
+
+    (( read_status == 0 )) || break
+  done < "$decoration_file"
+
+  # A duplicate record is ambiguous even when every visible field agrees.
+  (( matches == 1 )) || {
+    REPLY=''
+    return 1
+  }
+}
+
+_spaceship_supabase_collect_synced_decoration_records() {
+  emulate -L zsh
+
+  local decoration_file=${1-}
+  local line encoded record_ref tab=$'\t'
+  local -a seen_refs
+  local -i read_status
+
+  reply=()
+  [[ -n $decoration_file ]] || return 1
+  _spaceship_supabase_lstat_exists "$decoration_file" || return 0
+  _spaceship_supabase_safe_private_file "$decoration_file" || return 1
+
+  while true; do
+    line=''
+    IFS= read -r line
+    read_status=$?
+    if (( read_status != 0 && ${#line} == 0 )); then
+      break
+    fi
+    _spaceship_supabase_parse_synced_decoration_record "$line" || return 1
+    encoded=$REPLY
+    record_ref=${encoded%%"${tab}"*}
+    (( ${seen_refs[(Ie)$record_ref]} )) && return 1
+    seen_refs+=("$record_ref")
+    reply+=("v1$tab$encoded")
+    (( read_status == 0 )) || break
+  done < "$decoration_file"
+}
+
+# This is not a general JSON API.  It is a bounded native walker for exactly
+# the two `supabase projects list` forms we support.  It structurally skips
+# surplus CLI fields so that `ref` and `name` are read only at a top-level
+# project record. Escaped field values are never decoded or accepted as names.
+_spaceship_supabase_projects_json_ws() {
+  emulate -L zsh
+  while (( json_index <= json_length )) && [[ ${json_text[$json_index]} == [$' '$'\t'$'\r'$'\n'] ]]; do
+    (( json_index++ ))
+  done
+}
+
+_spaceship_supabase_projects_json_string() {
+  emulate -L zsh
+  local LC_ALL=C
+  local char escaped value=''
+  local -i index
+
+  REPLY=''
+  json_escaped=0
+  [[ ${json_text[$json_index]} == '"' ]] || return 1
+  (( json_index++ ))
+  while (( json_index <= json_length )); do
+    char=${json_text[$json_index]}
+    case $char in
+      '"') (( json_index++ )); REPLY=$value; return 0 ;;
+      \\)
+        json_escaped=1
+        (( json_index++ )); (( json_index <= json_length )) || return 1
+        escaped=${json_text[$json_index]}
+        case $escaped in
+          '"'|\\|/|b|f|n|r|t) (( json_index++ )) ;;
+          u)
+            (( json_index++ ))
+            for (( index = 0; index < 4; index++ )); do
+              (( json_index <= json_length )) && [[ ${json_text[$json_index]} == [0-9A-Fa-f] ]] || return 1
+              (( json_index++ ))
+            done
+            ;;
+          *) return 1 ;;
+        esac
+        ;;
+      *) [[ $char != [[:cntrl:]] ]] || return 1; value+=$char; (( json_index++ )) ;;
+    esac
+  done
+  return 1
+}
+
+_spaceship_supabase_projects_json_scalar() {
+  emulate -L zsh
+  local token='' char number='^-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?$'
+
+  while (( json_index <= json_length )); do
+    char=${json_text[$json_index]}
+    [[ $char == [A-Za-z0-9+.-] ]] || break
+    token+=$char
+    (( json_index++ ))
+  done
+  [[ $token == true || $token == false || $token == null || $token =~ $number ]]
+}
+
+_spaceship_supabase_projects_json_skip_value() {
+  emulate -L zsh
+  local -i depth=${1-0}
+
+  (( depth <= 16 )) || return 1
+  _spaceship_supabase_projects_json_ws
+  case ${json_text[$json_index]} in
+    '{') _spaceship_supabase_projects_json_skip_object "$depth" ;;
+    '[') _spaceship_supabase_projects_json_skip_array "$depth" ;;
+    '"') _spaceship_supabase_projects_json_string ;;
+    *) _spaceship_supabase_projects_json_scalar ;;
+  esac
+}
+
+_spaceship_supabase_projects_json_skip_array() {
+  emulate -L zsh
+  local -i depth=${1-0}
+
+  [[ ${json_text[$json_index]} == '[' ]] || return 1
+  (( json_index++ )); _spaceship_supabase_projects_json_ws
+  [[ ${json_text[$json_index]} == ']' ]] && { (( json_index++ )); return 0; }
+  while true; do
+    _spaceship_supabase_projects_json_skip_value "$(( depth + 1 ))" || return 1
+    _spaceship_supabase_projects_json_ws
+    case ${json_text[$json_index]} in
+      ',') (( json_index++ )); _spaceship_supabase_projects_json_ws ;;
+      ']') (( json_index++ )); return 0 ;;
+      *) return 1 ;;
+    esac
+  done
+}
+
+_spaceship_supabase_projects_json_skip_object() {
+  emulate -L zsh
+  local -i depth=${1-0}
+
+  [[ ${json_text[$json_index]} == '{' ]] || return 1
+  (( json_index++ )); _spaceship_supabase_projects_json_ws
+  [[ ${json_text[$json_index]} == '}' ]] && { (( json_index++ )); return 0; }
+  while true; do
+    _spaceship_supabase_projects_json_string || return 1
+    _spaceship_supabase_projects_json_ws
+    [[ ${json_text[$json_index]} == ':' ]] || return 1
+    (( json_index++ ))
+    _spaceship_supabase_projects_json_skip_value "$(( depth + 1 ))" || return 1
+    _spaceship_supabase_projects_json_ws
+    case ${json_text[$json_index]} in
+      ',') (( json_index++ )); _spaceship_supabase_projects_json_ws ;;
+      '}') (( json_index++ )); return 0 ;;
+      *) return 1 ;;
+    esac
+  done
+}
+
+_spaceship_supabase_projects_json_read_record() {
+  emulate -L zsh
+  local key value='' key_escaped value_escaped read_status
+  local ref='' name='' ref_seen=false name_seen=false target_invalid=false
+
+  json_record_match=0
+  json_record_name=''
+  [[ ${json_text[$json_index]} == '{' ]] || return 1
+  (( json_index++ )); _spaceship_supabase_projects_json_ws
+  [[ ${json_text[$json_index]} == '}' ]] && { (( json_index++ )); return 0; }
+  while true; do
+    _spaceship_supabase_projects_json_string
+    read_status=$?
+    (( read_status == 0 )) || return 1
+    key=$REPLY
+    key_escaped=$json_escaped
+    _spaceship_supabase_projects_json_ws
+    [[ ${json_text[$json_index]} == ':' ]] || return 1
+    (( json_index++ )); _spaceship_supabase_projects_json_ws
+    if [[ $key_escaped == 0 && ( $key == ref || $key == name ) ]]; then
+      value=''; value_escaped=1
+      if [[ ${json_text[$json_index]} == '"' ]]; then
+        _spaceship_supabase_projects_json_string
+        read_status=$?
+        (( read_status == 0 )) || return 1
+        value=$REPLY
+        value_escaped=$json_escaped
+      else
+        _spaceship_supabase_projects_json_skip_value 1 || return 1
+      fi
+      case $key in
+        ref)
+          [[ $ref_seen == false ]] || target_invalid=true
+          ref_seen=true
+          [[ $value_escaped == 0 ]] && ref=$value || ref=''
+          ;;
+        name)
+          [[ $name_seen == false ]] || target_invalid=true
+          name_seen=true
+          [[ $value_escaped == 0 ]] && name=$value || name=''
+          ;;
+      esac
+    else
+      _spaceship_supabase_projects_json_skip_value 1 || return 1
+    fi
+    _spaceship_supabase_projects_json_ws
+    case ${json_text[$json_index]} in
+      ',') (( json_index++ )); _spaceship_supabase_projects_json_ws ;;
+      '}') (( json_index++ )); break ;;
+      *) return 1 ;;
+    esac
+  done
+
+  _spaceship_supabase_validate_ref "$ref" || return 0
+  [[ $ref == "$json_target_ref" ]] || return 0
+  _spaceship_supabase_validate_label "$name" || target_invalid=true
+  [[ $target_invalid == false ]] || return 2
+  json_record_name=$REPLY
+  json_record_match=1
+}
+
+_spaceship_supabase_projects_json_read_array() {
+  emulate -L zsh
+  local matched_name=''
+  local -i matches=0 record_status
+
+  REPLY=''
+  [[ ${json_text[$json_index]} == '[' ]] || return 4
+  (( json_index++ )); _spaceship_supabase_projects_json_ws
+  [[ ${json_text[$json_index]} == ']' ]] && { (( json_index++ )); return 2; }
+  while true; do
+    _spaceship_supabase_projects_json_read_record
+    record_status=$?
+    case $record_status in
+      0) (( json_record_match )) && { (( matches++ )); matched_name=$json_record_name; } ;;
+      2) return 4 ;;
+      *) return 4 ;;
+    esac
+    _spaceship_supabase_projects_json_ws
+    case ${json_text[$json_index]} in
+      ',') (( json_index++ )); _spaceship_supabase_projects_json_ws ;;
+      ']') (( json_index++ )); break ;;
+      *) return 4 ;;
+    esac
+  done
+  case $matches in
+    0) return 2 ;;
+    1) REPLY=$matched_name; return 0 ;;
+    *) return 3 ;;
+  esac
+}
+
+_spaceship_supabase_projects_json_read_envelope() {
+  emulate -L zsh
+  local key key_escaped result_status=4 matched_name='' read_status
+
+  [[ ${json_text[$json_index]} == '{' ]] || return 4
+  (( json_index++ )); _spaceship_supabase_projects_json_ws
+  _spaceship_supabase_projects_json_string
+  read_status=$?
+  (( read_status == 0 )) || return 4
+  key=$REPLY; key_escaped=$json_escaped
+  [[ $key_escaped == 0 && $key == projects ]] || return 4
+  _spaceship_supabase_projects_json_ws
+  [[ ${json_text[$json_index]} == ':' ]] || return 4
+  (( json_index++ )); _spaceship_supabase_projects_json_ws
+  _spaceship_supabase_projects_json_read_array
+  result_status=$?; matched_name=$REPLY
+  _spaceship_supabase_projects_json_ws
+  [[ ${json_text[$json_index]} == '}' ]] || return 4
+  (( json_index++ ))
+  REPLY=$matched_name
+  return "$result_status"
+}
+
+_spaceship_supabase_find_project_name_in_json() {
+  emulate -L zsh
+  local LC_ALL=C
+  local json_text=${1-} json_target_ref=${2-} matched_name=''
+  local -i json_index=1 json_length=${#json_text} json_escaped=0
+  local -i json_record_match=0 result_status=4
+  local json_record_name=''
+
+  REPLY=''
+  (( json_length >= 2 && json_length <= 131072 )) || return 4
+  _spaceship_supabase_validate_ref "$json_target_ref" || return 4
+  json_target_ref=$REPLY
+  _spaceship_supabase_projects_json_ws
+  case ${json_text[$json_index]} in
+    '[') _spaceship_supabase_projects_json_read_array ;;
+    '{') _spaceship_supabase_projects_json_read_envelope ;;
+    *) return 4 ;;
+  esac
+  result_status=$?; matched_name=$REPLY
+  _spaceship_supabase_projects_json_ws
+  (( json_index > json_length )) || return 4
+  REPLY=$matched_name
+  return "$result_status"
+}
+
+_spaceship_supabase_capture_cli_output() {
+  emulate -L zsh
+  setopt extendedglob localtraps
+  local LC_ALL=C
+
+  local root=${1-}
+  local limit=${2-0}
+  # This is an internal-only timeout argument. Production callers below pass
+  # the fixed 15-second budget; focused tests may exercise a shorter budget
+  # without exposing a user configuration switch.
+  local timeout_seconds=${3-0}
+  local cli_path='' chunk='' child_pid='' temp='' fd=''
+  local -i attempt=0 bytes=0 child_status=0 cleanup_status=1 poll_status=0
+  local -i file_size=-1 interrupted=0 read_status=0
+  # Keep a fixed cap independent of the parser's smaller per-command limit.
+  # `ulimit -f` measures 512-byte blocks, so this is exactly 1 MiB.
+  local -i capture_file_blocks=2048 capture_poll_centiseconds=10
+  local -i capture_kill_grace_centiseconds=10
+  # A function-local SECONDS timer cannot be inherited from or changed by the
+  # caller. It is the direct-child watchdog's fixed wall-clock budget.
+  local -i SECONDS=0
+  shift 3 || return 1
+
+  REPLY=''
+  _spaceship_supabase_safe_project_root "$root" || return 4
+  root=$REPLY
+  REPLY=''
+  [[ $limit == [0-9]## ]] && (( limit >= 1 && limit <= 131072 )) || return 4
+  [[ $timeout_seconds == [0-9]## ]] && (( timeout_seconds >= 1 && timeout_seconds <= 15 )) || return 4
+  # This explicit helper needs zsh/files for secure cleanup and zsh/system for
+  # descriptor-only I/O. Load zsh/zselect here, not during normal plugin setup:
+  # its bounded direct-child poller is never part of prompt rendering.
+  [[ $_SPACESHIP_SUPABASE_FILES_READY == true && $_SPACESHIP_SUPABASE_SYSTEM_READY == true ]] || return 1
+  builtin zmodload zsh/zselect 2>/dev/null || return 1
+  cli_path=${commands[supabase]-}
+  [[ -n $cli_path && -x $cli_path ]] || return 2
+
+  # Zsh 5.2 inserts a relay process for `coproc { ... }`. An unbounded CLI can
+  # fill that relay's pipe before the reader observes its output limit, so this
+  # helper captures a direct child through a private descriptor instead. The
+  # direct child's fixed resource cap bounds its output file independently of
+  # the parser's 64-byte or 128-KiB accepted-output limit.
+  #
+  # Numeric signal names are accepted by Zsh 5.2. `localtraps` restores the
+  # caller's handlers, while the body observes the fixed signal status and
+  # reaches the cleanup block below.
+  builtin trap 'interrupted=129' 1
+  builtin trap 'interrupted=130' 2
+  builtin trap 'interrupted=143' 15
+
+  # `/tmp` is the fixed OS temporary directory rather than an environment
+  # supplied path. O_EXCL and O_NOFOLLOW make each retry an owner-only
+  # regular file. It is immediately unlinked while its descriptor remains
+  # open; all later I/O uses that descriptor, never a shell redirection or
+  # filesystem path. From here on, every exit passes through the cleanup below
+  # while the local child PID and descriptor are still available.
+  while (( attempt < 16 )); do
+    (( attempt++ ))
+    temp="/tmp/spaceship-supabase-cli.${EUID}.${$}.${RANDOM}"
+    if builtin sysopen -u fd -r -w -m 600 -o creat,excl,nofollow "$temp" 2>/dev/null; then
+      if [[ -z $fd ]] || ! builtin zf_rm -f "$temp" 2>/dev/null; then
+        cleanup_status=1
+      else
+        temp=''
+        if (( interrupted != 0 )); then
+          cleanup_status=$interrupted
+        else
+          cleanup_status=-1
+        fi
+      fi
+      break
+    fi
+    temp=''
+    fd=''
+    if (( interrupted != 0 )); then
+      cleanup_status=$interrupted
+      break
+    fi
+  done
+
+  while [[ -n $fd && $cleanup_status == -1 ]]; do
+    (( interrupted == 0 )) || {
+      cleanup_status=$interrupted
+      break
+    }
+
+    (
+      # The root was established as a safe absolute directory above. Keep this
+      # compatible with Zsh 5.2, whose `cd` builtin does not accept `--`.
+      builtin cd "$root" || exit 126
+      unset SUPABASE_WORKDIR
+      # Setting the hard and soft limits prevents the launched CLI from
+      # raising its own ceiling after exec. `-f` is specified in 512-byte
+      # blocks by Zsh, so this caps one captured output stream at 1 MiB.
+      builtin ulimit -HSf "$capture_file_blocks" 2>/dev/null || exit 125
+      # `exec` makes child_pid the CLI itself, not a relay or wrapper process.
+      exec "$cli_path" "$@" 1>&"$fd" 2>/dev/null
+    ) &
+    child_pid=$!
+    if [[ -z $child_pid ]]; then
+      cleanup_status=1
+      break
+    fi
+    # If a signal lands in the small window after `$!` becomes available but
+    # before polling begins, preserve the direct child's PID for the unified
+    # cleanup block instead of entering any wait primitive.
+    if (( interrupted != 0 )); then
+      cleanup_status=$interrupted
+      break
+    fi
+
+    # Poll the direct child rather than blocking in `wait`: a CLI can ignore
+    # SIGXFSZ after reaching the fixed file-size ceiling, or emit no output at
+    # all. Every 100ms this parent-side watchdog checks both the held FD's
+    # shared file position and a local 15-second deadline. Zsh records a
+    # finished background child's status, so `kill -0` becomes false before
+    # the later `wait` retrieves that cached status.
+    while builtin kill -0 "$child_pid" 2>/dev/null; do
+      if (( interrupted != 0 )); then
+        cleanup_status=$interrupted
+        break
+      fi
+      # `systell` is a Zsh math function. Assigning its expression to this
+      # integer parameter avoids invoking an external stat utility or parser.
+      file_size="systell($fd)"
+      if (( file_size < 0 )); then
+        cleanup_status=1
+        break
+      fi
+      if (( file_size > limit )); then
+        REPLY=''
+        cleanup_status=3
+        break
+      fi
+      if (( SECONDS >= timeout_seconds )); then
+        cleanup_status=1
+        break
+      fi
+      builtin zselect -t "$capture_poll_centiseconds" 2>/dev/null
+      poll_status=$?
+      if (( interrupted != 0 )); then
+        cleanup_status=$interrupted
+        break
+      fi
+      # A timeout returns 1. Any other error fails closed and reaches the
+      # direct-child cleanup below rather than risking an unbounded busy loop.
+      if (( poll_status != 0 && poll_status != 1 )); then
+        cleanup_status=1
+        break
+      fi
+    done
+    (( cleanup_status == -1 )) || break
+
+    # A signal can arrive after `$!` is assigned but before `wait` starts.
+    # Observe it immediately before the only blocking primitive so cleanup
+    # terminates and reaps a quiet direct child instead of waiting forever.
+    if (( interrupted != 0 )); then
+      cleanup_status=$interrupted
+      break
+    fi
+    builtin wait "$child_pid" 2>/dev/null
+    child_status=$?
+    if (( interrupted != 0 )); then
+      cleanup_status=$interrupted
+      break
+    fi
+    # A completed wait has reaped the direct child regardless of its exit
+    # status. Clearing now avoids ever signaling a PID that the OS could reuse.
+    child_pid=''
+
+    if ! builtin sysseek -u "$fd" -w end 0; then
+      cleanup_status=1
+      break
+    fi
+    (( interrupted == 0 )) || {
+      cleanup_status=$interrupted
+      break
+    }
+    file_size="systell($fd)"
+    if (( file_size < 0 )); then
+      cleanup_status=1
+      break
+    fi
+    if (( file_size > limit )); then
+      REPLY=''
+      cleanup_status=3
+      break
+    fi
+    if (( child_status != 0 )); then
+      cleanup_status=1
+      break
+    fi
+
+    if ! builtin sysseek -u "$fd" -w start 0; then
+      cleanup_status=1
+      break
+    fi
+    while true; do
+      chunk=''
+      # The completed file was size-checked above. Keep a byte counter as a
+      # defense in depth before any remote bytes enter the parser's buffer.
+      builtin sysread -i "$fd" -s 4096 chunk
+      read_status=$?
+      if (( interrupted != 0 )); then
+        cleanup_status=$interrupted
+        break
+      fi
+      if (( read_status != 0 && ${#chunk} == 0 )); then
+        if (( read_status == 5 )); then
+          cleanup_status=0
+        else
+          cleanup_status=1
+        fi
+        break
+      fi
+      (( read_status == 0 )) || {
+        REPLY=''
+        cleanup_status=1
+        break
+      }
+      (( bytes += ${#chunk} ))
+      if (( bytes > limit )); then
+        REPLY=''
+        cleanup_status=3
+        break
+      fi
+      REPLY+=$chunk
+    done
+    break
+  done
+
+  # Unlike a function EXIT trap, this cleanup runs before the function's
+  # locals unwind. Every value is created by this helper; no project path, CLI
+  # text, or remote data is evaluated as cleanup code.
+  if [[ -n $child_pid ]]; then
+    # Give a well-behaved CLI a brief chance to leave, then force-reap a
+    # SIGTERM-ignoring direct child. `child_pid` stays nonempty until `wait`
+    # consumes its status, so it cannot refer to a reused PID here.
+    builtin kill -15 "$child_pid" 2>/dev/null || true
+    builtin zselect -t "$capture_kill_grace_centiseconds" 2>/dev/null || true
+    if builtin kill -0 "$child_pid" 2>/dev/null; then
+      builtin kill -9 "$child_pid" 2>/dev/null || true
+    fi
+    builtin wait "$child_pid" 2>/dev/null || true
+    child_pid=''
+  fi
+  if [[ -n $fd ]]; then
+    exec {fd}>&-
+  fi
+  if [[ -n $temp ]]; then
+    builtin zf_rm -f "$temp" 2>/dev/null || true
+  fi
+  return "$cleanup_status"
+}
+
+_spaceship_supabase_cli_output_style() {
+  emulate -L zsh
+  setopt extendedglob
+  local LC_ALL=C
+
+  local version=${1-}
+  local major minor patch
+  local -a parts
+
+  REPLY=''
+  (( ${#version} >= 5 && ${#version} <= 64 )) || return 1
+  if [[ $version == *$'\n' ]]; then
+    version=${version%$'\n'}
+    if [[ $version == *$'\r' ]]; then
+      version=${version%$'\r'}
+    fi
+  fi
+  [[ $version != *$'\n'* && $version != *$'\r'* && $version != *$'\t'* && $version != *' '* ]] || return 1
+  version=${version#v}
+  parts=("${(@s:.:)version}")
+  (( ${#parts[@]} == 3 )) || return 1
+  major=${parts[1]}
+  minor=${parts[2]}
+  patch=${parts[3]}
+  [[ ${#major} -le 3 && ${#minor} -le 6 && ${#patch} -le 6 ]] || return 1
+  [[ $major == [0-9]## && $minor == [0-9]## && $patch == [0-9]## ]] || return 1
+  (( 10#$major == 2 )) || return 1
+
+  # v2.72.7 uses the older global flag.  v2.111.0 and v2.113.0 advertise
+  # --output-format json, whose stable result is the projects envelope.
+  if (( 10#$minor >= 111 )); then
+    REPLY='output-format'
+  else
+    REPLY='output'
+  fi
+}
+
+_spaceship_supabase_discover_project_name() {
+  emulate -L zsh
+
+  local root=${1-}
+  local target_ref=${2-}
+  local version style output
+  local -i result_status
+
+  REPLY=''
+  _spaceship_supabase_capture_cli_output "$root" 64 15 --version
+  result_status=$?
+  case $result_status in
+    0) version=$REPLY ;;
+    2) return 10 ;;
+    3) return 12 ;;
+    *) return 11 ;;
+  esac
+  _spaceship_supabase_cli_output_style "$version" || return 13
+  style=$REPLY
+
+  case $style in
+    output-format)
+      _spaceship_supabase_capture_cli_output "$root" 131072 15 projects list --output-format json
+      ;;
+    output)
+      _spaceship_supabase_capture_cli_output "$root" 131072 15 projects list --output json
+      ;;
+    *) return 13 ;;
+  esac
+  result_status=$?
+  case $result_status in
+    0) output=$REPLY ;;
+    2) return 10 ;;
+    3) return 12 ;;
+    *) return 11 ;;
+  esac
+  _spaceship_supabase_find_project_name_in_json "$output" "$target_ref"
+}
+
 _spaceship_supabase_resolve_live_context() {
   emulate -L zsh
 
@@ -658,7 +1428,8 @@ _spaceship_supabase_resolve_live_context() {
 _spaceship_supabase_resolve_context() {
   emulate -L zsh
 
-  local root ref remote branch branch_status
+  local root ref remote branch branch_status synced encoded
+  local synced_kind synced_name tab=$'\t'
 
   _SPACESHIP_SUPABASE_CONTEXT=()
   _spaceship_supabase_find_supabase_root || return 1
@@ -710,6 +1481,21 @@ _spaceship_supabase_resolve_context() {
       _SPACESHIP_SUPABASE_CONTEXT[label]=$REPLY
     fi
   fi
+
+  # Synced project metadata is a separately owned, opt-in snapshot.  It is
+  # consulted only after a live identity and manual-label precedence are
+  # established; it never decorates a configured mapping or recovers a ref.
+  if [[ ${_SPACESHIP_SUPABASE_CONTEXT[source]} == live && ${SPACESHIP_SUPABASE_FORMAT-} == label+ref && -z ${_SPACESHIP_SUPABASE_CONTEXT[label]-} && ${SPACESHIP_SUPABASE_USE_SYNCED_DECORATIONS-} == true ]]; then
+    if _spaceship_supabase_read_synced_decoration "$ref"; then
+      synced=$REPLY
+      synced=${synced#*"${tab}"}
+      synced_kind=${synced%%"${tab}"*}
+      synced=${synced#*"${tab}"}
+      synced_name=${synced%%"${tab}"*}
+      _SPACESHIP_SUPABASE_CONTEXT[synced_kind]=$synced_kind
+      _SPACESHIP_SUPABASE_CONTEXT[synced_name]=$synced_name
+    fi
+  fi
 }
 
 _spaceship_supabase_render() {
@@ -720,6 +1506,8 @@ _spaceship_supabase_render() {
   local remote=${3-}
   local branch=${4-}
   local label=${5-}
+  local synced_name=${6-}
+  local synced_kind=${7-}
   local display
 
   _spaceship_supabase_validate_ref "$ref" || return 0
@@ -732,6 +1520,14 @@ _spaceship_supabase_render() {
       if _spaceship_supabase_validate_label "$label"; then
         label=$REPLY
         display="$label ($ref)"
+      elif [[ $source == live ]] && _spaceship_supabase_validate_synced_decoration_kind "$synced_kind"; then
+        synced_kind=$REPLY
+        if _spaceship_supabase_validate_label "$synced_name"; then
+          synced_name=$REPLY
+          display="$synced_name ($ref) · synced:$synced_kind"
+        else
+          display=$ref
+        fi
       else
         display=$ref
       fi
@@ -778,7 +1574,9 @@ spaceship_supabase() {
     "${_SPACESHIP_SUPABASE_CONTEXT[source]-}" \
     "${_SPACESHIP_SUPABASE_CONTEXT[remote]-}" \
     "${_SPACESHIP_SUPABASE_CONTEXT[branch]-}" \
-    "${_SPACESHIP_SUPABASE_CONTEXT[label]-}"
+    "${_SPACESHIP_SUPABASE_CONTEXT[label]-}" \
+    "${_SPACESHIP_SUPABASE_CONTEXT[synced_name]-}" \
+    "${_SPACESHIP_SUPABASE_CONTEXT[synced_kind]-}"
 }
 
 _spaceship_supabase_collect_label_records() {
@@ -810,10 +1608,10 @@ _spaceship_supabase_collect_label_records() {
   done < "$label_file"
 }
 
-_spaceship_supabase_write_label_records() (
+_spaceship_supabase_write_private_records() (
   emulate -L zsh
 
-  local label_file=${1-}
+  local state_file=${1-}
   local parent temp fd record
   local -i attempt=0 write_failed=0
   shift || return 1
@@ -823,8 +1621,16 @@ _spaceship_supabase_write_label_records() (
   umask 077
 
   [[ $_SPACESHIP_SUPABASE_FILES_READY == true && $_SPACESHIP_SUPABASE_SYSTEM_READY == true ]] || return 1
-  [[ -n $label_file ]] || return 1
-  parent=${label_file:h}
+  [[ -n $state_file && $state_file == /* ]] || return 1
+  parent=${state_file:h}
+
+  # If an interrupt arrives after opening the temporary file, do not leave an
+  # ambiguous partial record behind.  The completed rename clears `temp` so
+  # the EXIT trap never touches a successfully published state file.
+  trap '[[ -z ${temp-} ]] || zf_rm -f "$temp" 2>/dev/null || true' EXIT
+  trap 'exit 129' HUP
+  trap 'exit 130' INT
+  trap 'exit 143' TERM
 
   if ! _spaceship_supabase_lstat_exists "$parent"; then
     # zsh/files builtins in Zsh 5.2 do not implement a `--` end-of-options
@@ -836,13 +1642,13 @@ _spaceship_supabase_write_label_records() (
 
   # Existing state must already be safe.  We do not overwrite a symlink,
   # group-readable file, or someone else's state file.
-  if _spaceship_supabase_lstat_exists "$label_file"; then
-    _spaceship_supabase_safe_private_file "$label_file" || return 1
+  if _spaceship_supabase_lstat_exists "$state_file"; then
+    _spaceship_supabase_safe_private_file "$state_file" || return 1
   fi
 
   while (( attempt < 16 )); do
     (( attempt++ ))
-    temp="${label_file}.tmp.${$}.${RANDOM}"
+    temp="${state_file}.tmp.${$}.${RANDOM}"
     if sysopen -u fd -w -m 600 -o creat,excl,nofollow,cloexec "$temp" 2>/dev/null; then
       break
     fi
@@ -863,10 +1669,11 @@ _spaceship_supabase_write_label_records() (
     return 1
   fi
 
-  zf_mv "$temp" "$label_file" 2>/dev/null || {
+  zf_mv "$temp" "$state_file" 2>/dev/null || {
     zf_rm -f "$temp" 2>/dev/null
     return 1
   }
+  temp=''
 )
 
 _spaceship_supabase_label_error() {
@@ -876,6 +1683,35 @@ _spaceship_supabase_label_error() {
       print -ru2 -- "spaceship-supabase: ${1}"
       ;;
   esac
+}
+
+_spaceship_supabase_sync_error() {
+  emulate -L zsh
+
+  case ${1-} in
+    SYNC_USAGE|SYNC_NO_LIVE_REF|SYNC_CLI_NOT_FOUND|SYNC_CLI_VERSION_UNSUPPORTED|\
+    SYNC_CLI_FAILED|SYNC_OUTPUT_INVALID|SYNC_NO_MATCH|SYNC_AMBIGUOUS_MATCH|\
+    SYNC_NAME_INVALID|SYNC_CANCELLED|SYNC_DECORATION_STORE_INVALID|\
+    SYNC_WRITE_FAILED|SYNC_REF_CHANGED|SYNC_TIME_UNAVAILABLE)
+      print -ru2 -- "spaceship-supabase: ${1}"
+      ;;
+  esac
+}
+
+_spaceship_supabase_sync_project_preview() {
+  emulate -L zsh
+
+  local project_name=${1-}
+  local ref=${2-}
+
+  _spaceship_supabase_validate_label "$project_name" || return 1
+  project_name=$REPLY
+  _spaceship_supabase_validate_ref "$ref" || return 1
+  ref=$REPLY
+  print -r -- 'spaceship-supabase sync project'
+  print -r -- "preview: $project_name ($ref) · synced:project"
+  print -r -- 'source: supabase-cli:projects-list'
+  print -r -- 'action: save separate synced decoration'
 }
 
 # Manual, user-owned label management.  These helpers are the only code path
@@ -1009,10 +1845,183 @@ spaceship_supabase_label() {
     filtered+=("v1$tab$ref$tab$label$tab$timestamp")
   fi
 
-  _spaceship_supabase_write_label_records "$label_file" "${filtered[@]}" || {
+  _spaceship_supabase_write_private_records "$label_file" "${filtered[@]}" || {
     _spaceship_supabase_label_error LABEL_WRITE_FAILED
     return 1
   }
+}
+
+# Explicit, user-invoked top-level project-name discovery.  This is the only
+# v0.2 path allowed to run the installed Supabase CLI, and it always proves the
+# current live ref again before publishing a separate synced-decoration record.
+spaceship_supabase_sync() {
+  emulate -L zsh
+
+  local action=${1-}
+  local assume_yes=false confirmation=''
+  local root ref initial_root initial_ref project_name decoration_file
+  local timestamp encoded record record_ref tab=$'\t'
+  local kind='project' source='supabase-cli:projects-list'
+  local -a records filtered
+  local -i result_status
+
+  case $# in
+    1)
+      [[ $action == project ]] || {
+        _spaceship_supabase_sync_error SYNC_USAGE
+        return 1
+      }
+      ;;
+    2)
+      [[ $action == project && $2 == --yes ]] || {
+        _spaceship_supabase_sync_error SYNC_USAGE
+        return 1
+      }
+      assume_yes=true
+      ;;
+    *)
+      _spaceship_supabase_sync_error SYNC_USAGE
+      return 1
+      ;;
+  esac
+
+  _spaceship_supabase_resolve_live_context || {
+    _spaceship_supabase_sync_error SYNC_NO_LIVE_REF
+    return 1
+  }
+  initial_root=${_SPACESHIP_SUPABASE_CONTEXT[root]}
+  initial_ref=${_SPACESHIP_SUPABASE_CONTEXT[ref]}
+
+  _spaceship_supabase_discover_project_name "$initial_root" "$initial_ref"
+  result_status=$?
+  case $result_status in
+    0) project_name=$REPLY ;;
+    2)
+      _spaceship_supabase_sync_error SYNC_NO_MATCH
+      return 1
+      ;;
+    3)
+      _spaceship_supabase_sync_error SYNC_AMBIGUOUS_MATCH
+      return 1
+      ;;
+    4|12)
+      _spaceship_supabase_sync_error SYNC_OUTPUT_INVALID
+      return 1
+      ;;
+    10)
+      _spaceship_supabase_sync_error SYNC_CLI_NOT_FOUND
+      return 1
+      ;;
+    13)
+      _spaceship_supabase_sync_error SYNC_CLI_VERSION_UNSUPPORTED
+      return 1
+      ;;
+    *)
+      _spaceship_supabase_sync_error SYNC_CLI_FAILED
+      return 1
+      ;;
+  esac
+  _spaceship_supabase_validate_label "$project_name" || {
+    _spaceship_supabase_sync_error SYNC_NAME_INVALID
+    return 1
+  }
+  project_name=$REPLY
+  _spaceship_supabase_sync_project_preview "$project_name" "$initial_ref" || {
+    _spaceship_supabase_sync_error SYNC_OUTPUT_INVALID
+    return 1
+  }
+
+  if [[ $assume_yes != true ]]; then
+    print -rn -- 'Save this synced decoration? [y/N] '
+    IFS= read -r confirmation || confirmation=''
+    print -r -- ''
+    case $confirmation in
+      y|Y|yes|YES) ;;
+      *)
+        _spaceship_supabase_sync_error SYNC_CANCELLED
+        return 1
+        ;;
+    esac
+  fi
+
+  # A Supabase relink, a root-boundary change, or a malformed ref that occurs
+  # while the user reviews the preview makes the proposal stale.  Never write
+  # a decoration in that case.
+  _spaceship_supabase_resolve_live_context || {
+    _spaceship_supabase_sync_error SYNC_REF_CHANGED
+    return 1
+  }
+  root=${_SPACESHIP_SUPABASE_CONTEXT[root]}
+  ref=${_SPACESHIP_SUPABASE_CONTEXT[ref]}
+  [[ $root == "$initial_root" && $ref == "$initial_ref" ]] || {
+    _spaceship_supabase_sync_error SYNC_REF_CHANGED
+    return 1
+  }
+
+  _spaceship_supabase_synced_decoration_file_path || {
+    _spaceship_supabase_sync_error SYNC_DECORATION_STORE_INVALID
+    return 1
+  }
+  decoration_file=$REPLY
+  _spaceship_supabase_synced_decoration_store_status
+  case $? in
+    0)
+      _spaceship_supabase_collect_synced_decoration_records "$decoration_file" || {
+        _spaceship_supabase_sync_error SYNC_DECORATION_STORE_INVALID
+        return 1
+      }
+      records=("${reply[@]}")
+      ;;
+    2)
+      records=()
+      ;;
+    *)
+      _spaceship_supabase_sync_error SYNC_DECORATION_STORE_INVALID
+      return 1
+      ;;
+  esac
+
+  timestamp=${EPOCHSECONDS-}
+  _spaceship_supabase_validate_timestamp "$timestamp" || {
+    _spaceship_supabase_sync_error SYNC_TIME_UNAVAILABLE
+    return 1
+  }
+  timestamp=$REPLY
+  # Avoid arithmetic on externally supplied/implementation-sized timestamp
+  # strings. The strict decimal validator ran above; this only rejects zero.
+  [[ $timestamp == *[1-9]* ]] || {
+    _spaceship_supabase_sync_error SYNC_TIME_UNAVAILABLE
+    return 1
+  }
+
+  filtered=()
+  for record in "${records[@]}"; do
+    encoded=${record#v1"${tab}"}
+    record_ref=${encoded%%"${tab}"*}
+    [[ $record_ref == "$ref" ]] && continue
+    filtered+=("$record")
+  done
+  filtered+=("v1$tab$ref$tab$kind$tab$project_name$tab$source$tab$timestamp")
+
+  # The file walk and timestamp work above can take longer than the first
+  # recheck. Prove the proposal is still for this exact live root/ref at the
+  # last possible point before the atomic rename can publish it.
+  _spaceship_supabase_resolve_live_context || {
+    _spaceship_supabase_sync_error SYNC_REF_CHANGED
+    return 1
+  }
+  root=${_SPACESHIP_SUPABASE_CONTEXT[root]}
+  ref=${_SPACESHIP_SUPABASE_CONTEXT[ref]}
+  [[ $root == "$initial_root" && $ref == "$initial_ref" ]] || {
+    _spaceship_supabase_sync_error SYNC_REF_CHANGED
+    return 1
+  }
+
+  _spaceship_supabase_write_private_records "$decoration_file" "${filtered[@]}" || {
+    _spaceship_supabase_sync_error SYNC_WRITE_FAILED
+    return 1
+  }
+  print -r -- 'spaceship-supabase: SYNC_SAVED'
 }
 
 # Read-only local diagnostics.  Default output intentionally omits filesystem
@@ -1021,8 +2030,8 @@ spaceship_supabase_label() {
 spaceship_supabase_doctor() {
   emulate -L zsh
 
-  local verbose=false root ref remote configured_ref live_state config_state store_state
-  local branch label
+  local verbose=false root ref remote configured_ref live_state config_state store_state sync_store_state sync_state
+  local branch label sync_encoded sync_kind sync_name sync_source sync_timestamp tab=$'\t'
 
   case $# in
     0) ;;
@@ -1047,6 +2056,9 @@ spaceship_supabase_doctor() {
     print -r -- 'configured-map: not-requested'
     _spaceship_supabase_doctor_label_store_state
     print -r -- "label-store: $REPLY"
+    _spaceship_supabase_doctor_synced_decoration_store_state
+    print -r -- "synced-decoration-store: $REPLY"
+    print -r -- 'synced-decoration: unavailable'
     print -r -- 'remediation: run supabase link in the intended project, then retry.'
     return 0
   fi
@@ -1085,6 +2097,25 @@ spaceship_supabase_doctor() {
   store_state=$REPLY
   print -r -- "label-store: $store_state"
 
+  _spaceship_supabase_doctor_synced_decoration_store_state
+  sync_store_state=$REPLY
+  print -r -- "synced-decoration-store: $sync_store_state"
+  sync_state='unavailable'
+  if [[ $live_state == valid && $sync_store_state == available ]] && _spaceship_supabase_read_synced_decoration "$ref"; then
+    sync_encoded=$REPLY
+    sync_encoded=${sync_encoded#*"${tab}"}
+    sync_kind=${sync_encoded%%"${tab}"*}
+    sync_encoded=${sync_encoded#*"${tab}"}
+    sync_name=${sync_encoded%%"${tab}"*}
+    sync_encoded=${sync_encoded#*"${tab}"}
+    sync_source=${sync_encoded%%"${tab}"*}
+    sync_timestamp=${sync_encoded#*"${tab}"}
+    sync_state='available'
+  elif [[ $sync_store_state == disabled ]]; then
+    sync_state='disabled'
+  fi
+  print -r -- "synced-decoration: $sync_state"
+
   if [[ $verbose == true ]]; then
     if _spaceship_supabase_validate_ref "$ref"; then
       print -r -- "ref: $REPLY"
@@ -1100,6 +2131,19 @@ spaceship_supabase_doctor() {
       if [[ $store_state == available ]] && _spaceship_supabase_read_label "$ref"; then
         label=$REPLY
         print -r -- "label: $label"
+      fi
+      if [[ $sync_state == available ]]; then
+        # Values were accepted by the synced-record parser before reaching this
+        # diagnostic.  Deliberately omit the project name: verbose doctor is
+        # allowed to reveal provenance, not a remote-derived prompt label.
+        print -r -- "synced-kind: $sync_kind"
+        print -r -- "synced-source: $sync_source"
+        print -r -- "synced-saved-at: $sync_timestamp"
+        if [[ ${SPACESHIP_SUPABASE_USE_LABELS-} == true && $store_state == available ]] && _spaceship_supabase_read_label "$ref"; then
+          print -r -- 'synced-status: shadowed'
+        else
+          print -r -- 'synced-status: available'
+        fi
       fi
     fi
   fi

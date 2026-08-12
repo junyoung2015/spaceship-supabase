@@ -295,7 +295,7 @@ test_actual_spaceship_v4_is_used_for_safe_rendering() {
 }
 
 test_prompt_path_never_uses_cli_network_or_label_writes() {
-  local tmp='' root='' output_file='' error_file='' bin='' tool='' original_path="$PATH"
+  local tmp='' root='' output_file='' error_file='' bin='' tool='' decoration_before='' original_path="$PATH"
   local -a tools
   new_test_dir || return 1
   tmp="$REPLY"
@@ -321,8 +321,16 @@ test_prompt_path_never_uses_cli_network_or_label_writes() {
   SPACESHIP_TEST_TOOL_LOG="$tmp/tool-calls.log"
   export SPACESHIP_TEST_TOOL_LOG
   reset_public_configuration
+  SPACESHIP_SUPABASE_FORMAT='label+ref'
+  SPACESHIP_SUPABASE_USE_SYNCED_DECORATIONS=true
   load_plugin_runtime || return 1
   materialize_project "$root" 2.113.0 "$REF_LIVE" || return 1
+  command mkdir -p "$tmp/state/spaceship-supabase"
+  command chmod 700 "$tmp/state/spaceship-supabase"
+  print -r -- $'v1\taaaaaaaaaaaaaaaaaaaa\tproject\tSentinel Project\tsupabase-cli:projects-list\t1700000000' > "$tmp/state/spaceship-supabase/decorations.tsv"
+  command chmod 600 "$tmp/state/spaceship-supabase/decorations.tsv"
+  read_file "$tmp/state/spaceship-supabase/decorations.tsv"
+  decoration_before=$REPLY
   command mkdir -p "$tmp/home/.supabase"
   print -r -- 'credential-sentinel-never-rendered' > "$tmp/home/.supabase/access-token"
   HOME="$tmp/home"
@@ -331,7 +339,10 @@ test_prompt_path_never_uses_cli_network_or_label_writes() {
   assert_success 'normal prompt render remains local-only' render_quietly_at "$root" "$output_file" "$error_file"
   assert_file_missing "$SPACESHIP_TEST_TOOL_LOG" 'prompt path invokes no CLI, network, parser, or external helper tool'
   assert_file_missing "$tmp/state/spaceship-supabase/labels.tsv" 'prompt path performs no label-state writes'
+  read_file "$tmp/state/spaceship-supabase/decorations.tsv"
+  assert_eq "$decoration_before" "$REPLY" 'prompt path preserves enabled synced-decoration state without writing it'
   read_file "$output_file"
+  assert_contains "$REPLY" "Sentinel Project ($REF_LIVE) · synced:project" 'enabled synced decoration really reaches the prompt under the no-I/O sentinel'
   assert_not_contains "$REPLY" credential-sentinel-never-rendered 'prompt does not expose credential-like data'
   read_file "$error_file"
   assert_empty "$REPLY" 'normal prompt render emits no stderr'

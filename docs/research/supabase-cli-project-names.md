@@ -239,7 +239,7 @@ should:
 1. Resolve the same safe root and exact current live ref as the renderer.
 2. Refuse to operate without a currently valid live ref.
 3. Run the installed stable CLI only in the explicit helper process.
-4. Prefer the locally documented structured-output flag, with version-aware fallback from `--output-format json` to `--output json` for older supported CLIs.
+4. Select the locally documented structured-output flag by version: use `--output-format json` for v2.111.0+ and `--output json` for older supported v2 CLIs. Do not retry a second flag after a command failure, because that would create another remote operation and could mask the first failure.
 5. Accept both supported response shapes: `{ "projects": [...] }` and `[...]`.
 6. Match the current 20-letter ref exactly against a validated response field; never choose by project name, organization, order, or the CLI's `linked` marker alone.
 7. Validate the selected name before display or storage. For an initial release, the existing printable-ASCII/no-`%`/no-control/no-tab/no-newline/64-byte label policy is safer than attempting arbitrary terminal Unicode.

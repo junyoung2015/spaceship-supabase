@@ -11,7 +11,12 @@
 🔷 abcdefghijklmnopqrst
 ```
 
-That segment means a valid local linked-project reference was found beneath the current project boundary. It does **not** claim a friendly project name, a hosted Supabase Branch, remote status, credentials, network freshness, or the state of a deployment. The full 20-character reference is always shown so the prompt remains unambiguous.
+That default segment means a valid local linked-project reference was found beneath the current project boundary. It does **not** automatically claim a friendly project name, a hosted Supabase Branch, remote status, credentials, network freshness, or the state of a deployment. The full 20-character reference is always shown so the prompt remains unambiguous.
+
+An unreleased v0.2 beta capability can save one explicitly confirmed,
+point-in-time project-name decoration after a user runs a command. It remains
+off by default, keeps the full ref visible, says `synced:project`, and never
+does a remote lookup while a prompt is drawn.
 
 The project started from a practical safety need: Supabase commands can mutate
 a hosted target while the terminal provides no persistent, recognizable target
@@ -28,6 +33,7 @@ the [v0.2 target-context contract](docs/design/v0.2-target-context-contract.md).
 - Zsh 5.2 or later.
 - Spaceship Prompt v4. The release suite uses Spaceship v4.21.0.
 - A project linked by a stable Supabase CLI release, with `supabase/config.toml` and a valid `supabase/.temp/project-ref` where live identity should be displayed.
+- Only for the explicit v0.2 beta sync helper: an installed, authenticated Supabase CLI that can list the intended project. It is not required for normal prompt rendering.
 
 No Supabase CLI executable, network access, credential lookup, Node, Python, or jq is used while a prompt is rendered.
 
@@ -184,9 +190,53 @@ When there is no valid live `project-ref`, the deliberately non-authoritative ou
 
 A live `project-ref` always wins. The top-level `project_id` in `config.toml` is never interpreted as a hosted project reference.
 
+### Explicit synced project name — v0.2 beta
+
+The normal prompt never calls Supabase or exposes a remote project name. When
+using a reviewed v0.2 beta tag, you can deliberately discover the name for the
+**current live ref** and save it as a separate, point-in-time decoration:
+
+```zsh
+spaceship_supabase_sync project
+# Review the preview, then answer y to save it.
+
+# For an intentional non-interactive confirmation:
+spaceship_supabase_sync project --yes
+```
+
+The command runs the installed Supabase CLI only after proving a safe root and
+live ref. It matches that exact full ref in `supabase projects list`, previews
+the following form, and asks before writing its own owner-only state file:
+
+```text
+🔷 Customer API (abcdefghijklmnopqrst) · synced:project
+```
+
+Saving does not make a name visible. Opt in to the remote-derived decoration
+separately, while retaining the full identity ref:
+
+```zsh
+SPACESHIP_SUPABASE_FORMAT="label+ref"
+SPACESHIP_SUPABASE_USE_SYNCED_DECORATIONS=true
+```
+
+`synced:project` means user-confirmed lookup data saved earlier, not network
+freshness at this prompt. A matching manual label visibly wins; clearing that
+manual label can reveal an independently valid synced decoration on the next
+render. Synced text never decorates a configured mapping, recovers a missing
+identity, or implies a hosted branch. See [configuration](docs/configuration.md),
+[data sources](docs/data-sources.md), and [labels and local state](docs/labels.md).
+
 ## Trust boundary and privacy
 
 Prompt input is untrusted filesystem state. The plugin accepts only narrow, validated values, rejects unsafe identity-critical root/ref/config input, and interpolates no raw file contents into the prompt. An unsafe optional local-db branch is simply omitted; it cannot alter an independently valid live reference. Normal failures are silent. Optional debug output uses fixed diagnostic codes rather than paths or raw values.
+
+The explicit sync helper is outside that prompt boundary: it may invoke the
+installed Supabase CLI, which may use credentials and network access. Its
+output is size-bounded, parsed only as the two audited project-list JSON forms,
+matched to the exact current ref, validated before preview/storage, and never
+echoed raw on failure. It rechecks live identity immediately before its atomic
+write.
 
 The reference displayed in a prompt is not a secret, but it can still identify a hosted project. Treat screenshots, recordings, support logs, and copied prompts accordingly. `spaceship_supabase_doctor` is local-only and redacts status by default; use `--verbose` only when you intend to share its sanitized values.
 

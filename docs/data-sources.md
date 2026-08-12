@@ -37,6 +37,39 @@ After selecting a safe root, the section applies the following identity rules:
 
 No label, prior prompt result, current directory cache, or missing-state fallback can replace this order. The prompt rereads local state on every render, so a successful `supabase link`, source repair, or local database-branch change is reflected on the next prompt without changing directories.
 
+## Explicit synced-project lookup — v0.2 beta
+
+`spaceship_supabase_sync project [--yes]` is an explicit helper, not a prompt
+data source. Before it invokes the installed Supabase CLI, it proves the same
+safe root and exact live `project-ref` used by the renderer. It then chooses
+the documented machine-readable project-list form based on the local CLI
+version:
+
+| CLI family | Explicit helper invocation | Accepted JSON shape |
+| --- | --- | --- |
+| v2.72.7-style | `supabase projects list --output json` | Array of project records |
+| v2.111.0+ current style | `supabase projects list --output-format json` | Object with a single `projects` array |
+
+The helper makes one fail-closed, version-aware selection; it does not retry a
+second flag after a CLI failure. It accepts only those two bounded JSON forms. It selects exactly one
+record whose validated `ref` equals the current 20-character live ref; it never
+uses list position, a ref prefix, a project name, or the CLI's `linked` marker
+as identity proof. It validates the selected printable-ASCII name, previews the
+proposed `synced:project` form, requires confirmation by default, and resolves
+the live ref again immediately before its atomic write.
+
+The helper may use credentials and network access through the installed CLI.
+That is deliberately outside the prompt boundary. Prompt rendering never calls
+the CLI, reads credentials, makes a network request, refreshes state, or writes
+a file.
+
+On success the helper saves a separate owner-only, versioned synced-decoration
+record keyed by the live ref. This record is a non-authoritative snapshot with
+fixed `supabase-cli:projects-list` provenance and a saved-at timestamp. It is
+considered by the renderer only with a current live ref, `label+ref` format,
+and `SPACESHIP_SUPABASE_USE_SYNCED_DECORATIONS=true`. It never decorates a
+configured mapping and never becomes a fallback identity source.
+
 ## Config mapping is not live link state
 
 `SPACESHIP_SUPABASE_CONFIG_REMOTE` opts in to a single local mapping. For example:
@@ -75,7 +108,7 @@ The branch is optional decoration, not identity. If its directory or file is abs
 ## Unsupported layout
 
 `.supabase/project.json` belongs to Supabase's alpha next/V3 shell, not the
-stable v0.1.1 CLI contract. It is intentionally unsupported for this release. A
+stable CLI contract used by this plugin. It is intentionally unsupported. A
 future opt-in adapter may be considered only after it is part of a stable,
 documented CLI contract and has equivalent safety coverage.
 

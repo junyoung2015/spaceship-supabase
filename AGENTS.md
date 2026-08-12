@@ -38,12 +38,28 @@ This file is the non-negotiable implementation contract for coding agents and co
 - A label must never select, resurrect, replace, or out-rank a current identity.
 - Ignore malformed, oversized, symlinked, insecure, or duplicate-ambiguous label files; do not repair them from the prompt path.
 - `spaceship_supabase_doctor` is local and read-only; redact by default.
+- A synced decoration is separate remote-derived state, not a manual label.
+  Only the explicit `spaceship_supabase_sync project [--yes]` helper may create
+  or replace it. It must prove a current live ref before CLI work, accept only
+  the audited version-aware `projects list` JSON array/envelope forms, match
+  the exact ref once, validate all text, preview/confirm by default, recheck
+  the live ref immediately before an owner-only atomic write, and use fixed
+  redacted errors. Never add a prompt-time sync, refresh, CLI call, telemetry
+  snapshot reader, or hosted-branch inference without a new contract review.
+- A synced decoration is display-only: it is opt-in, live-ref-only,
+  `label+ref`-only, visibly marked `synced:project`, and subordinate to a
+  matching manual label. It cannot decorate a configured mapping or restore an
+  identity.
 
 ## Test and documentation gate
 
 - Keep fixtures synthetic, flat, tracked, and free of real project state, credentials, user paths, or captured Supabase directories.
 - Use `ZSH_BIN=/path/to/zsh tests/run.zsh` for every implementation change; run `--performance` for release-sensitive work.
 - Preserve actual Spaceship v4 rendering coverage for prompt-injection cases.
+- For explicit synced-project work, use fake CLI tests only outside prompt
+  rendering and cover both supported output forms, no-write errors, bounded
+  output/child cleanup, state permissions, exact-ref freshness, and the enabled
+  decoration benchmark scenario.
 - Update README, configuration, data-source, label, troubleshooting, compatibility, testing, changelog, and release metadata when a public behavior changes.
 - Preserve historical planning artifacts with superseded notices; do not edit them to make invalid alpha assumptions look current.
 

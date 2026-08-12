@@ -66,3 +66,52 @@ spaceship_supabase_doctor --verbose
 ## Privacy model
 
 A label is your own local annotation, not an authoritative Supabase name. Store only text you are comfortable having in a terminal prompt. Use `SPACESHIP_SUPABASE_USE_LABELS=false` to stop label reads without deleting local state, or `spaceship_supabase_label clear` while in a live linked project to remove its current label.
+
+## Synced project decorations — v0.2 beta
+
+A synced project decoration is deliberately **not** a second manual label. It
+is a separately stored, user-confirmed snapshot from the explicit helper:
+
+```zsh
+spaceship_supabase_sync project
+# Preview, then confirm with y.
+
+spaceship_supabase_sync project --yes
+```
+
+The command requires the current checkout to have a valid live `project-ref`.
+Only after that proof does it invoke the installed Supabase CLI, match exactly
+one top-level project record to that ref, validate the name, display a preview,
+and save a versioned record. It writes neither the manual-label file nor shell
+configuration. Cancellation, CLI/auth failure, malformed data, an unsafe name,
+or a changed live ref leaves both stores unchanged.
+
+The separate default state location is:
+
+```text
+${XDG_STATE_HOME:-$HOME/.local/state}/spaceship-supabase/decorations.tsv
+```
+
+It uses the same owner-only, non-symlinked, bounded, atomic-update protections
+as the manual-label store, but has its own schema and fixed source provenance.
+Do not hand-edit it. The prompt reads a matching record only with all of these
+settings in effect:
+
+```zsh
+SPACESHIP_SUPABASE_FORMAT="label+ref"
+SPACESHIP_SUPABASE_USE_SYNCED_DECORATIONS=true
+```
+
+Then the exact form is:
+
+```text
+🔷 Customer API (abcdefghijklmnopqrst) · synced:project
+```
+
+`synced:project` says that an explicit lookup was saved earlier; it does not
+claim network freshness. A matching manual label remains visible instead, and
+clearing that label can reveal the independent synced record on the next live
+render. Synced text never applies to a configured mapping or recreates a
+missing target. `spaceship_supabase_doctor` reports only redacted sync status;
+`--verbose` can show its validated kind, source, and saved-at provenance, but
+does not print the remote-derived name.

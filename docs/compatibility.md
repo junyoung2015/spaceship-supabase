@@ -11,6 +11,21 @@ v0.1.1 supports:
 
 The section does not invoke the CLI at prompt time. Fixture versions therefore validate the on-disk contract, not an executable dependency or a claim that every CLI command is supported.
 
+The unreleased v0.2 beta `spaceship_supabase_sync project` helper is the one
+explicit exception to the no-CLI prompt rule: it requires an installed CLI only
+when a user invokes it. Its compatibility path is deliberately narrow:
+
+- v2.72.7-style CLI output uses `supabase projects list --output json` and a
+  JSON array;
+- v2.111.0 and v2.113.0 current-style output use
+  `supabase projects list --output-format json` and a `projects` envelope; and
+- the helper accepts only those two bounded shapes, then requires exactly one
+  project record whose `ref` equals the current live ref.
+
+The helper is not a remote adapter for prompt rendering, telemetry metadata,
+or hosted branches. A missing, unsupported, failing, or differently shaped CLI
+output saves no state and leaves normal prompt behavior local-only.
+
 ## Stable layout contract
 
 The supported layout is:
@@ -28,7 +43,7 @@ The optional `supabase/.branches/_current_branch` input is a local database-bran
 
 An unsupported, malformed, unreadable, oversized, symlinked, or ambiguous **identity-critical** root/config/live-ref layout is not a compatibility fallback. It renders no segment. This is a security property: a terminal prompt must not turn arbitrary filesystem bytes into trusted context. The local-db branch is optional decoration: an unsafe branch file is omitted while an independently valid live ref remains visible.
 
-v0.1.1 intentionally does not support:
+The v0.2 beta intentionally does not support:
 
 - `.supabase/project.json`, which belongs to the alpha next/V3 shell rather than
   the stable CLI contract;
