@@ -138,7 +138,7 @@ test_current_envelope_sync_is_confirmed_separate_and_opt_in() {
   start_sync_runtime "$tmp/state" || return 1
   materialize_project "$root" 2.113.0 "$REF_A" || return 1
   prepare_fake_supabase "$tmp" "$original_path" || return 1
-  SPACESHIP_TEST_SUPABASE_OUTPUT="{\"projects\":[{\"id\":\"$REF_A\",\"ref\":\"$REF_A\",\"name\":\"Customer API\",\"database\":{\"host\":\"ignored\"}}]}"
+  SPACESHIP_TEST_SUPABASE_OUTPUT="{\"projects\":[{\"id\":\"$REF_A\",\"ref\":\"$REF_A\",\"name\":\"Customer API\",\"database\":{\"host\":\"ignored\"}}],\"message\":\"\"}"
   export SPACESHIP_TEST_SUPABASE_OUTPUT
   decoration_file="$SPACESHIP_SUPABASE_SYNCED_DECORATION_FILE"
   state_dir="${decoration_file:h}"
@@ -260,7 +260,7 @@ test_version_selection_is_strict_and_fail_closed() {
 
   SPACESHIP_TEST_SUPABASE_VERSION='2.111.0'
   SPACESHIP_TEST_SUPABASE_EXPECTED_LIST_ARGS='projects list --output-format json'
-  SPACESHIP_TEST_SUPABASE_OUTPUT="{\"projects\":[{\"ref\":\"$REF_A\",\"name\":\"Boundary Current\"}]}"
+  SPACESHIP_TEST_SUPABASE_OUTPUT="{\"projects\":[{\"ref\":\"$REF_A\",\"name\":\"Boundary Current\"}],\"message\":\"\"}"
   export SPACESHIP_TEST_SUPABASE_VERSION SPACESHIP_TEST_SUPABASE_EXPECTED_LIST_ARGS SPACESHIP_TEST_SUPABASE_OUTPUT
   assert_success 'v2.111 boundary selects current structured output exactly' spaceship_supabase_sync project --yes
   read_file "$SPACESHIP_TEST_SUPABASE_LOG"
@@ -269,6 +269,14 @@ test_version_selection_is_strict_and_fail_closed() {
   assert_file_exists "$decoration_file" 'v2.111 exact flag writes a synced record'
 
   zmodload zsh/files 2>/dev/null || return 1
+  zf_rm "$decoration_file"
+  SPACESHIP_TEST_SUPABASE_VERSION='2.113.0'
+  SPACESHIP_TEST_SUPABASE_EXPECTED_LIST_ARGS='projects list --output-format json'
+  SPACESHIP_TEST_SUPABASE_OUTPUT="{\"message\":\"\",\"projects\":[{\"ref\":\"$REF_A\",\"name\":\"Current Reordered\"}]}"
+  export SPACESHIP_TEST_SUPABASE_VERSION SPACESHIP_TEST_SUPABASE_EXPECTED_LIST_ARGS SPACESHIP_TEST_SUPABASE_OUTPUT
+  assert_success 'current envelope accepts its fixed fields in either JSON key order' spaceship_supabase_sync project --yes
+  assert_file_exists "$decoration_file" 'reordered current envelope writes a synced record'
+
   zf_rm "$decoration_file"
   SPACESHIP_TEST_SUPABASE_VERSION='2.110.9'
   SPACESHIP_TEST_SUPABASE_EXPECTED_LIST_ARGS='projects list --output json'
@@ -444,6 +452,51 @@ test_legacy_array_and_helper_failures_never_write_state() {
   command_status=$?
   (( command_status != 0 )) || test_failure 'unsupported JSON envelope must fail'
   assert_synced_state_unchanged "$decoration_file" "$state_before" 'unsupported JSON envelope'
+
+  SPACESHIP_TEST_SUPABASE_OUTPUT="{\"projects\":[{\"ref\":\"$REF_A\",\"name\":\"Missing Message\"}]}"
+  export SPACESHIP_TEST_SUPABASE_OUTPUT
+  output="$(spaceship_supabase_sync project --yes 2>"$error_file")"
+  command_status=$?
+  (( command_status != 0 )) || test_failure 'current envelope without its fixed message field must fail'
+  read_file "$error_file"
+  assert_contains "$REPLY" 'SYNC_OUTPUT_INVALID' 'missing current-envelope message uses a fixed parser error'
+  assert_synced_state_unchanged "$decoration_file" "$state_before" 'missing current-envelope message'
+
+  SPACESHIP_TEST_SUPABASE_OUTPUT="{\"projects\":[{\"ref\":\"$REF_A\",\"name\":\"Unexpected Field\"}],\"message\":\"\",\"unexpected\":true}"
+  export SPACESHIP_TEST_SUPABASE_OUTPUT
+  output="$(spaceship_supabase_sync project --yes 2>"$error_file")"
+  command_status=$?
+  (( command_status != 0 )) || test_failure 'unknown current-envelope field must fail'
+  read_file "$error_file"
+  assert_contains "$REPLY" 'SYNC_OUTPUT_INVALID' 'unknown current-envelope field uses a fixed parser error'
+  assert_synced_state_unchanged "$decoration_file" "$state_before" 'unknown current-envelope field'
+
+  SPACESHIP_TEST_SUPABASE_OUTPUT="{\"projects\":[{\"ref\":\"$REF_A\",\"name\":\"First\"}],\"projects\":[{\"ref\":\"$REF_A\",\"name\":\"Second\"}],\"message\":\"\"}"
+  export SPACESHIP_TEST_SUPABASE_OUTPUT
+  output="$(spaceship_supabase_sync project --yes 2>"$error_file")"
+  command_status=$?
+  (( command_status != 0 )) || test_failure 'duplicate projects field must fail'
+  read_file "$error_file"
+  assert_contains "$REPLY" 'SYNC_OUTPUT_INVALID' 'duplicate projects field uses a fixed parser error'
+  assert_synced_state_unchanged "$decoration_file" "$state_before" 'duplicate projects field'
+
+  SPACESHIP_TEST_SUPABASE_OUTPUT="{\"projects\":[{\"ref\":\"$REF_A\",\"name\":\"Duplicate Message\"}],\"message\":\"\",\"message\":\"\"}"
+  export SPACESHIP_TEST_SUPABASE_OUTPUT
+  output="$(spaceship_supabase_sync project --yes 2>"$error_file")"
+  command_status=$?
+  (( command_status != 0 )) || test_failure 'duplicate message field must fail'
+  read_file "$error_file"
+  assert_contains "$REPLY" 'SYNC_OUTPUT_INVALID' 'duplicate message field uses a fixed parser error'
+  assert_synced_state_unchanged "$decoration_file" "$state_before" 'duplicate message field'
+
+  SPACESHIP_TEST_SUPABASE_OUTPUT="{\"projects\":[{\"ref\":\"$REF_A\",\"name\":\"Nonempty Message\"}],\"message\":\"not accepted\"}"
+  export SPACESHIP_TEST_SUPABASE_OUTPUT
+  output="$(spaceship_supabase_sync project --yes 2>"$error_file")"
+  command_status=$?
+  (( command_status != 0 )) || test_failure 'nonempty message field must fail'
+  read_file "$error_file"
+  assert_contains "$REPLY" 'SYNC_OUTPUT_INVALID' 'nonempty message field uses a fixed parser error'
+  assert_synced_state_unchanged "$decoration_file" "$state_before" 'nonempty message field'
 
   SPACESHIP_TEST_SUPABASE_OUTPUT='[{"ref":"aaaaaaaaaaaaaaaaaaaa","name":"unterminated"}'
   export SPACESHIP_TEST_SUPABASE_OUTPUT
@@ -717,7 +770,7 @@ test_sync_refuses_unsafe_storage_and_cleans_interrupted_writes() {
   command chmod 700 "${decoration_file:h}"
   print -r -- $'v1\taaaaaaaaaaaaaaaaaaaa\tproject\tStored Project\tsupabase-cli:projects-list\t1700000000' > "$decoration_file"
   command chmod 600 "$decoration_file"
-  SPACESHIP_TEST_SUPABASE_OUTPUT="{\"projects\":[{\"ref\":\"$REF_A\",\"name\":\"Fresh Project\"}]}"
+  SPACESHIP_TEST_SUPABASE_OUTPUT="{\"projects\":[{\"ref\":\"$REF_A\",\"name\":\"Fresh Project\"}],\"message\":\"\"}"
   export SPACESHIP_TEST_SUPABASE_OUTPUT
   cd "$root" || return 1
 
@@ -1088,7 +1141,7 @@ test_sync_refuses_to_invoke_cli_without_a_live_ref() {
   start_sync_runtime "$tmp/state" || return 1
   materialize_project "$root" 2.113.0 || return 1
   prepare_fake_supabase "$tmp" "$original_path" || return 1
-  SPACESHIP_TEST_SUPABASE_OUTPUT='{"projects":[]}'
+  SPACESHIP_TEST_SUPABASE_OUTPUT='{"projects":[],"message":""}'
   export SPACESHIP_TEST_SUPABASE_OUTPUT
   decoration_file="$SPACESHIP_SUPABASE_SYNCED_DECORATION_FILE"
   command mkdir -p "${decoration_file:h}"

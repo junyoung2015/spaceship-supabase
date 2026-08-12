@@ -14,8 +14,10 @@ The section does not invoke the CLI at prompt time. Fixture versions therefore v
 `v0.2.0-beta.1` is immutable but rejected and unpublished after its tag release
 gate failed, so it must not be installed or republished. Its successor,
 `v0.2.0-beta.2`, is a maintainer-only private-dogfood candidate, not a stable
-or external-beta approval. Once its reviewed annotated tag is published, it
-retains the supported environment above and adds the
+or external-beta approval. It safely rejects the current v2.111.0+ JSON success
+envelope during explicit sync; [#27](https://github.com/junyoung2015/spaceship-supabase/issues/27)
+tracks the successor-candidate repair. Once that repair is released, it retains
+the supported environment above and adds the
 `spaceship_supabase_sync project` helper as the one explicit exception to the
 no-CLI prompt rule: it requires an installed CLI only when a user invokes it.
 Its compatibility path is deliberately narrow:
@@ -23,7 +25,8 @@ Its compatibility path is deliberately narrow:
 - v2.72.7-style CLI output uses `supabase projects list --output json` and a
   JSON array;
 - v2.111.0 and v2.113.0 current-style output use
-  `supabase projects list --output-format json` and a `projects` envelope; and
+  `supabase projects list --output-format json` and a `projects` envelope with
+  the CLI's fixed empty `message` companion field; and
 - the helper accepts only those two bounded shapes, then requires exactly one
   project record whose `ref` equals the current live ref.
 

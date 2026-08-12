@@ -1029,23 +1029,59 @@ _spaceship_supabase_projects_json_read_array() {
 
 _spaceship_supabase_projects_json_read_envelope() {
   emulate -L zsh
-  local key key_escaped result_status=4 matched_name='' read_status
+  local key value='' key_escaped value_escaped read_status
+  local matched_name='' result_status=4
+  local projects_seen=false message_seen=false
 
   [[ ${json_text[$json_index]} == '{' ]] || return 4
   (( json_index++ )); _spaceship_supabase_projects_json_ws
-  _spaceship_supabase_projects_json_string
-  read_status=$?
-  (( read_status == 0 )) || return 4
-  key=$REPLY; key_escaped=$json_escaped
-  [[ $key_escaped == 0 && $key == projects ]] || return 4
-  _spaceship_supabase_projects_json_ws
-  [[ ${json_text[$json_index]} == ':' ]] || return 4
-  (( json_index++ )); _spaceship_supabase_projects_json_ws
-  _spaceship_supabase_projects_json_read_array
-  result_status=$?; matched_name=$REPLY
-  _spaceship_supabase_projects_json_ws
-  [[ ${json_text[$json_index]} == '}' ]] || return 4
-  (( json_index++ ))
+  [[ ${json_text[$json_index]} == '}' ]] && return 4
+  while true; do
+    _spaceship_supabase_projects_json_string
+    read_status=$?
+    (( read_status == 0 )) || return 4
+    key=$REPLY; key_escaped=$json_escaped
+    [[ $key_escaped == 0 ]] || return 4
+    _spaceship_supabase_projects_json_ws
+    [[ ${json_text[$json_index]} == ':' ]] || return 4
+    (( json_index++ )); _spaceship_supabase_projects_json_ws
+
+    case $key in
+      projects)
+        [[ $projects_seen == false ]] || return 4
+        projects_seen=true
+        _spaceship_supabase_projects_json_read_array
+        result_status=$?; matched_name=$REPLY
+        (( result_status != 4 )) || return 4
+        ;;
+      message)
+        # Current v2.111.0+ JSON output is emitted by
+        # `output.success("", { projects })`, which adds this fixed empty
+        # companion field. It is structural only: never read or render it.
+        [[ $message_seen == false ]] || return 4
+        message_seen=true
+        value=''; value_escaped=1
+        [[ ${json_text[$json_index]} == '"' ]] || return 4
+        _spaceship_supabase_projects_json_string
+        read_status=$?
+        (( read_status == 0 )) || return 4
+        value=$REPLY; value_escaped=$json_escaped
+        [[ $value_escaped == 0 && -z $value ]] || return 4
+        ;;
+      *)
+        # Keep this deliberately narrow: no generic top-level JSON adapter.
+        return 4
+        ;;
+    esac
+
+    _spaceship_supabase_projects_json_ws
+    case ${json_text[$json_index]} in
+      ',') (( json_index++ )); _spaceship_supabase_projects_json_ws ;;
+      '}') (( json_index++ )); break ;;
+      *) return 4 ;;
+    esac
+  done
+  [[ $projects_seen == true && $message_seen == true ]] || return 4
   REPLY=$matched_name
   return "$result_status"
 }
