@@ -21,6 +21,9 @@ dogfood only after its reviewed annotated tag has passed the release gate and
 published a GitHub prerelease; it is not a stable release and does not authorize
 external or phase-2-alpha invitations. The earlier `v0.2.0-beta.1` tag is
 immutable but rejected and unpublished, so it must not be installed or reused.
+During maintainer dogfood, beta.2 was found to reject the current v2.111.0+
+projects-list JSON success envelope safely; it writes no decoration in that
+case. The focused compatibility repair is tracked in [#27](https://github.com/junyoung2015/spaceship-supabase/issues/27) and requires a successor prerelease before current-style sync is relied on.
 
 The project started from a practical safety need: Supabase commands can mutate
 a hosted target while the terminal provides no persistent, recognizable target
@@ -204,6 +207,12 @@ The normal prompt never calls Supabase or exposes a remote project name. After
 the reviewed `v0.2.0-beta.2` annotated tag has published a GitHub prerelease,
 maintainer-private dogfood can deliberately discover the name for the **current
 live ref** and save it as a separate, point-in-time decoration:
+
+> **beta.2 compatibility hold:** the published beta.2 helper rejects the
+> stable current-style v2.111.0+ `{ "projects": [...], "message": "" }`
+> envelope fail-closed, so it saves no decoration. Do not rely on beta.2 for
+> that sync path; [#27](https://github.com/junyoung2015/spaceship-supabase/issues/27)
+> tracks the successor-candidate fix. Normal live-ref rendering is unaffected.
 
 ```zsh
 spaceship_supabase_sync project

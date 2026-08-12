@@ -48,7 +48,7 @@ version:
 | CLI family | Explicit helper invocation | Accepted JSON shape |
 | --- | --- | --- |
 | v2.72.7-style | `supabase projects list --output json` | Array of project records |
-| v2.111.0+ current style | `supabase projects list --output-format json` | Object with a single `projects` array |
+| v2.111.0+ current style | `supabase projects list --output-format json` | Object with a `projects` array and the CLI's fixed empty `message` companion field |
 
 The helper makes one fail-closed, version-aware selection; it does not retry a
 second flag after a CLI failure. It accepts only those two bounded JSON forms. It selects exactly one

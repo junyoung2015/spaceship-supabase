@@ -20,6 +20,9 @@ another command-specific override can still direct an operation elsewhere.
 - Private-dogfood release candidate: `v0.2.0-beta.2`. The release process may
   publish it only as a reviewed annotated tag; it is neither a stable release
   nor approval for external or phase-2-alpha invitations.
+- Maintainer-dogfood finding: beta.2 safely rejects the stable current-style
+  projects-list success envelope during explicit sync. [#27](https://github.com/junyoung2015/spaceship-supabase/issues/27)
+  must land in a successor prerelease before that path proceeds.
 - Active product milestone: [`v0.2.0`](https://github.com/junyoung2015/spaceship-supabase/milestone/1)
   — human-readable target context.
 - Active work tracker: the GitHub Issues mapped below and assigned to that
@@ -162,7 +165,8 @@ name.
    current valid live ref through a user-invoked Supabase CLI action and saves a
    separate provenance-aware `synced:project` decoration. It never overwrites a
    manual label and never runs from prompt rendering. beta.2 adds no customer
-   feature beyond this scope.
+   feature beyond this scope. Its real current-style envelope incompatibility
+   is a fail-closed dogfood finding tracked by [#27](https://github.com/junyoung2015/spaceship-supabase/issues/27), not a reason to relax source validation.
 3. **Retain proof that the beta candidate cannot weaken the prompt.**
    [#7](https://github.com/junyoung2015/spaceship-supabase/issues/7) provides
    the fake-CLI boundary, separate-state, actual Spaceship v4 injection,
@@ -206,6 +210,7 @@ order without duplicating open/closed state in this document.
 | [#15 — redacted beta acceptance report](https://github.com/junyoung2015/spaceship-supabase/issues/15) | Prepare and later populate board-gated go/extend/pause evidence. | #6, #7, #8, #14 |
 | [#19 — v0.2.0-beta.1 private dogfood prerelease](https://github.com/junyoung2015/spaceship-supabase/issues/19) | Historical rejected/unpublished beta.1 candidate; preserve its failed-gate evidence and do not retag or publish it. | #6–#8, #14 |
 | [#25 — v0.2.0-beta.2 private dogfood prerelease](https://github.com/junyoung2015/spaceship-supabase/issues/25) | Cut the successor candidate with only merged release/test reliability fixes; no new customer feature or external-beta approval. | #6–#8, #14, #19 |
+| [#27 — current CLI JSON envelope compatibility](https://github.com/junyoung2015/spaceship-supabase/issues/27) | Accept the stable `{ projects, message: "" }` explicit-sync envelope without weakening bounded validation. | #6, #7, #25 |
 | [#9 — v0.2.0 release](https://github.com/junyoung2015/spaceship-supabase/issues/9) | Dogfood, pass the release gate, tag, and publish the stable release. | #3, #4, #6–#8, #13–#15 |
 
 ### Release acceptance

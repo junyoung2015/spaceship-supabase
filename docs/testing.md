@@ -42,8 +42,8 @@ The suite verifies behavior rather than xtrace-derived coverage percentages. Cri
 
 For the v0.2 beta synced-project slice, the maintained integration suite also
 uses a controlled fake `supabase` executable **only** in explicit-helper tests.
-It covers the v2.72.7 JSON array and current `projects` envelope, exact-ref
-matching, default confirmation and `--yes`, manual-label independence and
+It covers the v2.72.7 JSON array and current `projects` plus fixed-empty
+`message` envelope, exact-ref matching, default confirmation and `--yes`, manual-label independence and
 precedence, redacted error paths, malformed/oversized streaming output, child
 cleanup, ref recheck before write, owner-only atomic state, and no-live-ref
 short-circuiting. It proves that unsafe state and fake-CLI payloads cannot

@@ -2,7 +2,7 @@
 
 - **Status:** research input for the `spaceship-supabase` v0.2 roadmap
 - **Tracking:** [GitHub issue #3](https://github.com/junyoung2015/spaceship-supabase/issues/3)
-- **Decision update:** [#5](https://github.com/junyoung2015/spaceship-supabase/issues/5) records a no-go for consuming `linked-project.json` in v0.2 and its first external beta. The explicit top-level project sync in [#6](https://github.com/junyoung2015/spaceship-supabase/issues/6) is the only remote-derived beta.1-defined decoration source, carried unchanged by the `v0.2.0-beta.2` candidate. `v0.2.0-beta.1` is immutable, rejected, and unpublished after its release gate failed; hosted-branch sync is separately deferred to [#13](https://github.com/junyoung2015/spaceship-supabase/issues/13).
+- **Decision update:** [#5](https://github.com/junyoung2015/spaceship-supabase/issues/5) records a no-go for consuming `linked-project.json` in v0.2 and its first external beta. The explicit top-level project sync in [#6](https://github.com/junyoung2015/spaceship-supabase/issues/6) is the only remote-derived beta.1-defined decoration source. The published `v0.2.0-beta.2` candidate safely rejects the real v2.111.0+ `{ projects, message: "" }` success envelope; [#27](https://github.com/junyoung2015/spaceship-supabase/issues/27) tracks the narrow compatibility repair for its successor. `v0.2.0-beta.1` is immutable, rejected, and unpublished after its release gate failed; hosted-branch sync is separately deferred to [#13](https://github.com/junyoung2015/spaceship-supabase/issues/13).
 - **As of:** 2026-08-11
 - **CLI snapshots inspected:** `v2.72.7`, locally installed `v2.111.0`, and latest stable `v2.113.0`
 - **Primary-source policy:** this report uses only Supabase's official
@@ -70,7 +70,7 @@ not treated as a stable compatibility contract. [`v2.114.0-beta.8` prerelease](h
 | Linked-ref file | `supabase/.temp/project-ref` | `supabase/.temp/project-ref` | `supabase/.temp/project-ref` | Safe cross-version identity anchor |
 | Ref validation | `^[a-z]{20}$` | `^[a-z]{20}$` | `^[a-z]{20}$` | Continue exact validation; do not accept digits, uppercase, whitespace, or partial refs |
 | `linked-project.json` | Absent in the inspected tag | Present under `supabase/.temp/`; telemetry/internal metadata | Present under `supabase/.temp/`; telemetry/internal metadata | Deliberate v0.2 and first-external-beta no-go; never identity |
-| Project-name discovery | `supabase projects list --output json` returns project records plus `linked` | Local help supports `--output-format json`; legacy `--output json` remains available | `--output-format json` returns `{ "projects": [...] }`; legacy `--output json` returns the Go-compatible array | A refresh helper must version-detect or accept both JSON shapes |
+| Project-name discovery | `supabase projects list --output json` returns project records plus `linked` | Local help supports `--output-format json`; legacy `--output json` remains available | `--output-format json` returns `{ "projects": [...], "message": "" }`; legacy `--output json` returns the Go-compatible array | A refresh helper must version-detect or accept both JSON shapes |
 | Local DB branches | Hidden/legacy `supabase db branch`; `_current_branch` | `supabase db branch`; `_current_branch` | `supabase db branch`; `_current_branch` | May render only as `local-db:<name>` when opted in |
 | Hosted branches | `supabase branches ...` Management API commands | `supabase branches ...` Management API commands | `supabase branches ...` Management API commands | Requires explicit network-backed discovery; never infer from `_current_branch` |
 | `.supabase/project.json` | Not used | Source may contain next-shell work, but local stable binary exposes legacy behavior | Next/V3 alpha-shell state; stable legacy `link` explicitly does not use it | Defer until a stable, documented contract exists |
@@ -205,7 +205,7 @@ supabase projects list --output json
 
 [`v2.72.7` global output flag](https://github.com/supabase/cli/blob/v2.72.7/cmd/root.go#L229-L245)
 
-**Verified fact:** the stable `v2.113.0` TypeScript handler still returns Management API project objects plus `linked`. Its Go-compatible `--output json` path emits an array, while its newer `--output-format json` path emits an object containing `projects`. [`v2.113.0` fields and output branches](https://github.com/supabase/cli/blob/v2.113.0/apps/cli/src/legacy/commands/projects/list/list.handler.ts#L34-L65), [`v2.113.0` JSON formatting](https://github.com/supabase/cli/blob/v2.113.0/apps/cli/src/legacy/commands/projects/list/list.handler.ts#L139-L178), [`v2.113.0` documented output examples](https://github.com/supabase/cli/blob/v2.113.0/apps/cli/src/legacy/commands/projects/list/SIDE_EFFECTS.md#L44-L80)
+**Verified fact:** the stable `v2.113.0` TypeScript handler still returns Management API project objects plus `linked`. Its Go-compatible `--output json` path emits an array, while its newer `--output-format json` path calls `output.success("", { projects })`. The JSON output layer serializes that success as `{ "projects": [...], "message": "" }`. [`v2.113.0` fields and output branches](https://github.com/supabase/cli/blob/v2.113.0/apps/cli/src/legacy/commands/projects/list/list.handler.ts#L34-L65), [`v2.113.0` JSON formatting](https://github.com/supabase/cli/blob/v2.113.0/apps/cli/src/legacy/commands/projects/list/list.handler.ts#L139-L178), [`v2.113.0` JSON output layer](https://github.com/supabase/cli/blob/v2.113.0/apps/cli/src/shared/output/output.layer.ts#L453-L455), [`v2.113.0` documented output examples](https://github.com/supabase/cli/blob/v2.113.0/apps/cli/src/legacy/commands/projects/list/SIDE_EFFECTS.md#L44-L80)
 
 The local `v2.111.0` help output advertises:
 
@@ -227,7 +227,7 @@ accessible to the logged-in user. [official Management API reference](https://su
 
 ### 3.3 Implemented explicit refresh design
 
-An explicit helper is feasible because it runs on user request rather than during rendering. The beta.1-defined surface implemented in [#6](https://github.com/junyoung2015/spaceship-supabase/issues/6) is carried unchanged by the `v0.2.0-beta.2` candidate and is intentionally narrower than this research originally proposed:
+An explicit helper is feasible because it runs on user request rather than during rendering. The beta.1-defined surface implemented in [#6](https://github.com/junyoung2015/spaceship-supabase/issues/6) is intentionally narrower than this research originally proposed. The published beta.2 parser fails closed on the real current-style envelope; [#27](https://github.com/junyoung2015/spaceship-supabase/issues/27) restores the intended strict support in a successor candidate:
 
 ```text
 spaceship_supabase_sync project [--yes]
@@ -532,9 +532,11 @@ Any implementation following this research should extend the release suite with 
 8. **What is the supported CLI-version floor for explicit top-level discovery?**
 
    Manual labels work across the entire plugin support range. The beta.1-defined
-   helper carried by the beta.2 candidate supports `v2.72.7` through `v2.113.0`
-   by handling both `projects list` output flags and JSON envelope variants. It
-   does not read `linked-project.json`.
+   helper's intended support spans `v2.72.7` through `v2.113.0` by handling
+   both `projects list` output flags and the exact JSON envelope variants. The
+   published beta.2 candidate fails closed on the current `{ projects, message:
+   "" }` companion field; [#27](https://github.com/junyoung2015/spaceship-supabase/issues/27)
+   tracks the successor repair. It does not read `linked-project.json`.
 
 9. **Should remote-name state have a TTL?**
 
@@ -549,7 +551,7 @@ The research supports recording these decisions directly in the v0.2 milestone:
 - **Accepted:** `supabase/.temp/project-ref` remains the stable local identity source for the current compatibility range.
 - **Accepted:** `_current_branch` is local database state and remains labeled `local-db:`.
 - **Accepted:** no CLI, network, credential, or write work enters prompt rendering.
-- **Carried by the `v0.2.0-beta.2` candidate:** explicit top-level project-name discovery via `supabase projects list`, exact live-ref matching, confirmation, and a separate `synced:project` record. [#6](https://github.com/junyoung2015/spaceship-supabase/issues/6) defines the public helper and failure boundary. The prior `v0.2.0-beta.1` tag is rejected and unpublished.
+- **Carried by the `v0.2.0-beta.2` candidate:** explicit top-level project-name discovery via `supabase projects list`, exact live-ref matching, confirmation, and a separate `synced:project` record. [#6](https://github.com/junyoung2015/spaceship-supabase/issues/6) defines the public helper and failure boundary. Beta.2's current-style envelope parser fails closed; [#27](https://github.com/junyoung2015/spaceship-supabase/issues/27) carries the successor fix. The prior `v0.2.0-beta.1` tag is rejected and unpublished.
 - **No-go for v0.2 and first external beta:** do not consume `linked-project.json`; [#5](https://github.com/junyoung2015/spaceship-supabase/issues/5) records the parser, staleness, compatibility, privacy, and support rationale.
 - **Deferred:** hosted branch names until exact branch-ref mapping is proven with a bounded primary API workflow.
 - **Deferred:** `.supabase/project.json` until it becomes a stable, documented CLI contract.

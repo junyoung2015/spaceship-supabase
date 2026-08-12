@@ -11,6 +11,13 @@ republish it. `v0.2.0-beta.2` is the sole successor candidate for
 maintainer-only private dogfood. Use the commands below only after its reviewed
 annotated tag has passed the release gate and a GitHub prerelease exists.
 
+> **Known beta.2 hold:** with stable current-style v2.111.0+ output, the
+> beta.2 explicit sync helper rejects `{ "projects": [...], "message": "" }`
+> fail-closed and saves no state. [#27](https://github.com/junyoung2015/spaceship-supabase/issues/27)
+> tracks the narrow parser repair; wait for its successor prerelease before
+> dogfooding current-style project-name sync. This does not affect normal
+> local live-ref rendering.
+
 ## Install or move to a reviewed beta
 
 For a new installation after beta.2 is published, pin the exact tag while

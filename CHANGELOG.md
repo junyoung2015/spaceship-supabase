@@ -6,6 +6,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+### Fixed
+
+- Accepted the current stable `supabase projects list --output-format json`
+  success envelope's fixed empty `message` companion field during the explicit
+  synced-project helper. The parser remains bounded and fail-closed for
+  unknown, duplicate, malformed, or nonempty companion fields.
+
 ## [0.2.0-beta.2]
 
 ### Added
