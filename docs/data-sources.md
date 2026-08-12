@@ -80,9 +80,11 @@ future opt-in adapter may be considered only after it is part of a stable,
 documented CLI contract and has equivalent safety coverage.
 
 Recent stable CLI versions also write
-`supabase/.temp/linked-project.json` as best-effort telemetry metadata. v0.1.1
-does not consume it: the file is undocumented as a product interface, has no
-freshness timestamp, may be absent for hosted branch links, and may retain data
-for another ref after relinking. The v0.2 investigation and exact-ref safety
-requirements are documented in the
-[Supabase CLI target-context research](research/supabase-cli-project-names.md).
+`supabase/.temp/linked-project.json` as best-effort telemetry metadata. The
+recorded v0.2 decision is not to consume it in the prompt or first external
+beta: the file is undocumented as a product interface, has no freshness
+timestamp, may be absent for hosted branch links, and may retain data for
+another ref after relinking. Reconsideration requires a documented stable CLI
+metadata contract and a new product decision. See the
+[Supabase CLI target-context research](research/supabase-cli-project-names.md)
+and [#5](https://github.com/junyoung2015/spaceship-supabase/issues/5).

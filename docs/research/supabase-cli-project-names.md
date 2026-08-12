@@ -2,6 +2,7 @@
 
 - **Status:** research input for the `spaceship-supabase` v0.2 roadmap
 - **Tracking:** [GitHub issue #3](https://github.com/junyoung2015/spaceship-supabase/issues/3)
+- **Decision update:** [#5](https://github.com/junyoung2015/spaceship-supabase/issues/5) records a no-go for consuming `linked-project.json` in v0.2 and its first external beta. The explicit top-level project sync in [#6](https://github.com/junyoung2015/spaceship-supabase/issues/6) remains the only planned remote-derived beta.1 decoration source; hosted-branch sync is separately deferred to [#13](https://github.com/junyoung2015/spaceship-supabase/issues/13).
 - **As of:** 2026-08-11
 - **CLI snapshots inspected:** `v2.72.7`, locally installed `v2.111.0`, and latest stable `v2.113.0`
 - **Primary-source policy:** this report uses only Supabase's official
@@ -21,7 +22,7 @@ The stable Supabase CLI contract still makes `supabase/.temp/project-ref` the ch
 Supabase project names are available, but no inspected stable local file is both authoritative and guaranteed fresh:
 
 - `supabase projects list` returns Management API project records with human-readable names, but it requires authentication and a network request. It therefore belongs in an explicit user-run refresh or discovery helper, never prompt rendering. [`v2.113.0` projects-list side effects](https://github.com/supabase/cli/blob/v2.113.0/apps/cli/src/legacy/commands/projects/list/SIDE_EFFECTS.md#L3-L36), [official CLI reference](https://supabase.com/docs/reference/cli/supabase-projects-list)
-- `supabase/.temp/linked-project.json` contains a project ref and name in recent CLI versions, but it was introduced as PostHog telemetry metadata, is best-effort, is not overwritten by ordinary cache-fill runs, and may be absent for linked hosted branch projects. It is shipped local state, but it is not a documented identity contract. [`v2.87.0` telemetry schema](https://github.com/supabase/cli/blob/v2.87.0/internal/telemetry/project.go#L14-L49), [`v2.113.0` non-overwrite and best-effort rules](https://github.com/supabase/cli/blob/v2.113.0/apps/cli/src/legacy/telemetry/legacy-linked-project-cache.layer.ts#L21-L35), [`v2.113.0` link side effects](https://github.com/supabase/cli/blob/v2.113.0/apps/cli/src/legacy/commands/link/SIDE_EFFECTS.md#L16-L40)
+- `supabase/.temp/linked-project.json` contains a project ref and name in recent CLI versions, but it was introduced as PostHog telemetry metadata, is best-effort, is not overwritten by ordinary cache-fill runs, and may be absent for linked hosted branch projects. It is shipped local state, but it is not a documented identity contract. The resulting v0.2 decision is **not to consume it** in the prompt or first external beta. [`v2.87.0` telemetry schema](https://github.com/supabase/cli/blob/v2.87.0/internal/telemetry/project.go#L14-L49), [`v2.113.0` non-overwrite and best-effort rules](https://github.com/supabase/cli/blob/v2.113.0/apps/cli/src/legacy/telemetry/legacy-linked-project-cache.layer.ts#L21-L35), [`v2.113.0` link side effects](https://github.com/supabase/cli/blob/v2.113.0/apps/cli/src/legacy/commands/link/SIDE_EFFECTS.md#L16-L40)
 - Project names are mutable through the Management API. A cached name can therefore become stale while the ref remains unchanged. [official Update a project API](https://supabase.com/docs/reference/api/v1-update-a-project), [`v2.113.0` generated update body](https://github.com/supabase/cli/blob/v2.113.0/apps/cli-go/pkg/api/types.gen.go#L8927-L8930)
 - `supabase/.branches/_current_branch` represents a **local database branch**. Hosted Supabase preview branches are Management API resources exposed by `supabase branches ...`; the two concepts must never be conflated. [`v2.113.0` local DB branch command](https://github.com/supabase/cli/blob/v2.113.0/apps/cli-go/cmd/db.go#L40-L44), [`v2.113.0` hosted branch list](https://github.com/supabase/cli/blob/v2.113.0/apps/cli-go/internal/branches/list/list.go#L16-L81), [official Supabase Branching guide](https://supabase.com/docs/guides/deployment/branching)
 - Since 2026-05-04, Supabase Branching without Git is the default and dashboard-created branches do not require a GitHub integration. A Git branch is therefore not a universal hosted-branch identity key. [official May 2026 announcement](https://supabase.com/blog/branching-without-git-is-now-the-default), [official May 2026 release update](https://github.com/supabase/supabase/releases/tag/v1.26.05)
@@ -68,7 +69,7 @@ not treated as a stable compatibility contract. [`v2.114.0-beta.8` prerelease](h
 | Stable shell | Go CLI | Stable legacy shell; TypeScript front end with Go parity/sidecar commands | Stable legacy shell; TypeScript front end with Go parity/sidecar commands | Test the old Go layout and current stable legacy shell semantics, not only repository `main` |
 | Linked-ref file | `supabase/.temp/project-ref` | `supabase/.temp/project-ref` | `supabase/.temp/project-ref` | Safe cross-version identity anchor |
 | Ref validation | `^[a-z]{20}$` | `^[a-z]{20}$` | `^[a-z]{20}$` | Continue exact validation; do not accept digits, uppercase, whitespace, or partial refs |
-| `linked-project.json` | Absent in the inspected tag | Present under `supabase/.temp/`; telemetry/internal metadata | Present under `supabase/.temp/`; telemetry/internal metadata | Optional matched decoration at most; never identity |
+| `linked-project.json` | Absent in the inspected tag | Present under `supabase/.temp/`; telemetry/internal metadata | Present under `supabase/.temp/`; telemetry/internal metadata | Deliberate v0.2 and first-external-beta no-go; never identity |
 | Project-name discovery | `supabase projects list --output json` returns project records plus `linked` | Local help supports `--output-format json`; legacy `--output json` remains available | `--output-format json` returns `{ "projects": [...] }`; legacy `--output json` returns the Go-compatible array | A refresh helper must version-detect or accept both JSON shapes |
 | Local DB branches | Hidden/legacy `supabase db branch`; `_current_branch` | `supabase db branch`; `_current_branch` | `supabase db branch`; `_current_branch` | May render only as `local-db:<name>` when opted in |
 | Hosted branches | `supabase branches ...` Management API commands | `supabase branches ...` Management API commands | `supabase branches ...` Management API commands | Requires explicit network-backed discovery; never infer from `_current_branch` |
@@ -169,6 +170,27 @@ The snapshot's lack of a timestamp means a consumer cannot distinguish “writte
 
 Given the parser complexity and the absence of a stable public contract, the lower-risk v0.2 sequence is to ship manual-label improvements first and place automatic `linked-project.json` consumption behind a separate product-contract decision.
 
+### 2.4 v0.2 decision: do not consume the telemetry snapshot
+
+[#5](https://github.com/junyoung2015/spaceship-supabase/issues/5) closed with a
+deliberate **no-go** for `supabase/.temp/linked-project.json` in v0.2 and the
+first external beta. The decision is not a claim that the file is malicious or
+unsupported by the CLI. It follows from the product's safety goal: the file is
+undocumented telemetry state, absent from the supported `v2.72.7` layout,
+untimestamped, deliberately non-overwriting in normal cache-fill behavior, and
+able to retain stale metadata across a top-level-to-hosted-branch relink.
+
+Exact embedded-ref matching would prevent one stale-ref case but cannot make a
+same-ref cached name current. A strict Zsh 5.2 JSON parser in the prompt path
+would add security, compatibility, performance, and support surface without
+providing more trustworthy recognition value than the confirmed explicit sync
+path in [#6](https://github.com/junyoung2015/spaceship-supabase/issues/6).
+
+Reconsider this source only if Supabase publishes a documented stable local
+project-name metadata contract with a defined schema, lifecycle, and freshness
+behavior. Any future reconsideration requires a new product-contract decision,
+not a silent expansion of the v0.2 beta scope.
+
 ## 3. `supabase projects list` as an explicit discovery source
 
 ### 3.1 What it returns
@@ -205,13 +227,14 @@ accessible to the logged-in user. [official Management API reference](https://su
 
 ### 3.3 Safe explicit refresh design
 
-An explicit helper is feasible because it runs on user request rather than during rendering. A conservative design could be:
+An explicit helper is feasible because it runs on user request rather than during rendering. The planned beta.1 surface in [#6](https://github.com/junyoung2015/spaceship-supabase/issues/6) is intentionally narrower than this research originally proposed:
 
 ```text
-spaceship_supabase_refresh [--project-names]
+spaceship_supabase_sync project [--yes]
 ```
 
-**Recommendation:** the helper should:
+It is not implemented by this research document. When implemented, the helper
+should:
 
 1. Resolve the same safe root and exact current live ref as the renderer.
 2. Refuse to operate without a currently valid live ref.
@@ -220,20 +243,23 @@ spaceship_supabase_refresh [--project-names]
 5. Accept both supported response shapes: `{ "projects": [...] }` and `[...]`.
 6. Match the current 20-letter ref exactly against a validated response field; never choose by project name, organization, order, or the CLI's `linked` marker alone.
 7. Validate the selected name before display or storage. For an initial release, the existing printable-ASCII/no-`%`/no-control/no-tab/no-newline/64-byte label policy is safer than attempting arbitrary terminal Unicode.
-8. Either present the name as a suggested manual label, or store it in a separate, clearly versioned “remote-name snapshot” file keyed by ref and carrying `fetched_at` and `source`. Do not silently rewrite the user-owned manual-label store.
+8. Preview a matching name and, only after confirmation, store it in the separate, clearly versioned synced-decoration file keyed by ref and carrying `fetched_at` and `source`. Do not silently rewrite the user-owned manual-label store.
 9. Write state only with the same owner-only, no-symlink, bounded, atomic-update rules as label state.
 10. Report failures in the helper, while leaving prompt behavior ref-only and silent.
 
-The safest first iteration is **discovery plus explicit confirmation**, for example:
+The beta.1 shape is **discovery plus explicit confirmation**, for example:
 
 ```text
-$ spaceship_supabase_refresh
-Current ref: abcdefghijklmnopqrst
-Supabase project name: Customer API
-Set manual label to "Customer API"? [y/N]
+$ spaceship_supabase_sync project
+Current ref: <validated live ref>
+Proposed synced:project decoration: <validated project name> (<validated live ref>)
+Save this point-in-time synced decoration? [y/N]
 ```
 
-That preserves the useful human name without implying background freshness. A later opt-in automatic snapshot can be evaluated after its trust and UX contract is documented.
+That preserves the useful human name without implying background freshness or
+overwriting the user's label vocabulary. The future display opt-in remains
+separate from the helper confirmation. Hosted-branch mapping remains later
+scope in [#13](https://github.com/junyoung2015/spaceship-supabase/issues/13).
 
 ## 4. Local database branches and hosted Supabase Branches are different
 
@@ -358,7 +384,7 @@ The same tag's internal `supabase-home.md` guide shows an older flat example wit
 | `supabase/.temp/project-ref` | Stable CLI's local linked ref | **Yes**, after strict root/path/file/value validation | **Yes** | Continue as authoritative local identity |
 | Explicit `[remotes.<name>].project_id` | User-selected configured mapping, not live link state | Only as already-documented non-authoritative fallback | Yes, strict Zsh-only parse | Keep mandatory `configured:<remote>` marker |
 | Manual label store | User-owned decoration keyed by ref | **No** | Yes, only when current ref exists and matches | Primary recognizable/custom-name mechanism |
-| `supabase/.temp/linked-project.json` | Best-effort telemetry metadata snapshot | **No** | Not yet recommended; safe parser/product contract required | Design spike or opt-in later; exact-ref match mandatory |
+| `supabase/.temp/linked-project.json` | Best-effort telemetry metadata snapshot | **No** | **No** for v0.2 and its first external beta | Deliberate no-go; reconsider only after a documented stable contract and new product decision |
 | `supabase projects list` | Authenticated remote project inventory with names | **No**; can enrich an exact current ref | **No** | Explicit discovery/refresh helper only |
 | `supabase/.branches/_current_branch` | Selected local database branch | **No** | Yes, under existing opt-in validation | Render only as `local-db:<name>` |
 | `supabase branches list` | Authenticated hosted branch inventory | **No**; can enrich an exact branch ref | **No** | Explicit future refresh helper only |
@@ -414,11 +440,11 @@ These constraints are especially important if names are introduced: a slow or un
 
 This immediately solves the recognition problem for all supported CLI versions, including `v2.72.7` and hosted branch refs with no metadata cache.
 
-**Recommended Stage B — explicit remote-name refresh experiment:**
+**Recommended Stage B — explicit remote-name sync (the beta.1 slice):**
 
 - add a user-invoked helper only after its state schema and parser are threat-modeled;
 - use `projects list` for top-level project names;
-- store a timestamped snapshot separately from manual labels, or ask the user to convert the remote name into a manual label;
+- preview and store a timestamped synced decoration separately from manual labels after explicit confirmation;
 - never refresh automatically from prompt rendering;
 - make staleness visible in `doctor`/`list`, not necessarily in every prompt;
 - require exact ref equality at lookup and display time.
@@ -436,16 +462,16 @@ Any implementation following this research should extend the release suite with 
 ### Identity preservation
 
 - A valid live ref always appears in full in `ref` and human-name formats.
-- A label or cached name never produces output after the live/config identity disappears.
-- A metadata record for a different ref is ignored.
+- A label or synced decoration never produces output after the live/config identity disappears.
+- A synced record for a different ref is ignored.
 - Changing `project-ref` in the same directory immediately changes the next render and invalidates the old decoration.
-- A configured mapping remains visibly non-authoritative and never inherits a live-only remote-name snapshot by accident.
+- A configured mapping remains visibly non-authoritative and never inherits a live-only synced decoration by accident.
 
 ### Name safety
 
 - Reject `%`, ESC/CSI/OSC, controls, tabs, newlines, excessive length, malformed encodings, and unsafe whitespace according to the chosen documented policy.
 - Validate actual bytes passed through `spaceship::section::v4`, not only helper return values.
-- Reject oversized, multi-record-ambiguous, insecure-permission, and symlinked metadata state.
+- Reject oversized, multi-record-ambiguous, insecure-permission, and symlinked synced-decoration state.
 - Confirm a safe name can decorate but cannot alter color, symbol, prefix, suffix, or prompt evaluation.
 
 ### Refresh helper
@@ -460,7 +486,8 @@ Any implementation following this research should extend the release suite with 
 ### Branch separation
 
 - `_current_branch` is absent by default and rendered only as `local-db:<validated-name>` when enabled.
-- A hosted branch ref with no `linked-project.json` still renders the full ref.
+- A hosted branch ref renders the full ref regardless of whether a telemetry
+  snapshot happens to exist.
 - Local branch state never becomes a hosted branch label.
 - Hosted branch enrichment is accepted only after an exact API branch-project-ref match.
 
@@ -472,9 +499,9 @@ Any implementation following this research should extend the release suite with 
 
 ## 9. Open questions before implementing automatic names
 
-1. **Should the first refresh helper store anything automatically?**
+1. **Resolved for beta.1: what does the first sync helper write?**
 
-   Safest default: show the exact match and ask the user whether to set a manual label. A separate automatic snapshot adds state versioning, expiry, privacy, and precedence decisions.
+   [#6](https://github.com/junyoung2015/spaceship-supabase/issues/6) requires an exact-match preview and confirmation before one separate, timestamped `synced:project` record is written. It never changes a manual label. Whether a later helper can offer a manual-label conversion remains a separate UX decision.
 
 2. **What name character policy is acceptable?**
 
@@ -482,7 +509,10 @@ Any implementation following this research should extend the release suite with 
 
 3. **How should stale remote names be communicated?**
 
-   Since projects can be renamed and the CLI telemetry cache does not overwrite itself, the UX needs either an explicit “snapshot” concept, a fetched timestamp in `doctor`, or a workflow that converts the fetched name into an intentionally user-owned label.
+   Projects can be renamed after a user-confirmed sync. The beta.1 record is
+   therefore explicitly point-in-time, carries `fetched_at`, and never claims
+   prompt-time freshness. Verbose doctor must make the saved state reviewable;
+   automatic prompt-time refresh remains prohibited.
 
 4. **Does `projects list` enumerate hosted branch projects for every account/plan state?**
 
@@ -500,9 +530,12 @@ Any implementation following this research should extend the release suite with 
 
    Recommendation: only after the next shell reaches the stable channel and Supabase documents a durable shape and lifecycle. Source presence in a stable tag is insufficient because stable currently publishes the legacy shell.
 
-8. **What is the supported CLI-version floor for automatic discovery?**
+8. **What is the supported CLI-version floor for explicit top-level discovery?**
 
-   Manual labels work across the entire plugin support range. A helper using `projects list` can support `v2.72.7` through `v2.113.0` if it handles both output flag and JSON envelope variants. Reading `linked-project.json` would require an additional version/layout capability check because the file was not present in `v2.72.7`.
+   Manual labels work across the entire plugin support range. The beta.1 helper
+   can support `v2.72.7` through `v2.113.0` if it handles both `projects list`
+   output flags and JSON envelope variants. It does not read
+   `linked-project.json`.
 
 9. **Should remote-name state have a TTL?**
 
@@ -517,8 +550,8 @@ The research supports recording these decisions directly in the v0.2 milestone:
 - **Accepted:** `supabase/.temp/project-ref` remains the stable local identity source for the current compatibility range.
 - **Accepted:** `_current_branch` is local database state and remains labeled `local-db:`.
 - **Accepted:** no CLI, network, credential, or write work enters prompt rendering.
-- **Research/implementation candidate:** explicit project-name discovery via `supabase projects list`, initially as a label suggestion or confirmed import.
-- **Design spike:** matched `linked-project.json` name as an opt-in local snapshot, only if a safe Zsh-path parser and clear stale-name UX justify the complexity.
+- **Accepted beta.1 implementation scope:** explicit top-level project-name discovery via `supabase projects list`, exact live-ref matching, confirmation, and a separate `synced:project` record. [#6](https://github.com/junyoung2015/spaceship-supabase/issues/6) defines the public helper and failure boundary.
+- **No-go for v0.2 and first external beta:** do not consume `linked-project.json`; [#5](https://github.com/junyoung2015/spaceship-supabase/issues/5) records the parser, staleness, compatibility, privacy, and support rationale.
 - **Deferred:** hosted branch names until exact branch-ref mapping is proven with a bounded primary API workflow.
 - **Deferred:** `.supabase/project.json` until it becomes a stable, documented CLI contract.
 
