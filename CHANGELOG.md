@@ -10,6 +10,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 - Added an outcome-driven v0.2 roadmap centered on recognizable project and environment context, with GitHub Issues replacing the archived BMad backlog as the active progress tracker.
 - Added a primary-source Supabase CLI research report covering local project-name metadata, hosted/local branch semantics, refresh options, and compatibility risks.
+- Added an accepted v0.2 target-context contract that fixes the product vocabulary, exact prompt forms, privacy defaults, manual-label precedence, and synced-decoration provenance before feature code begins.
 
 ### Fixed
 

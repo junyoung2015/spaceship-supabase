@@ -22,6 +22,7 @@ for doc in \
   README.md LICENSE VERSION CHANGELOG.md SECURITY.md SUPPORT.md CONTRIBUTING.md AGENTS.md \
   docs/configuration.md docs/data-sources.md docs/labels.md docs/troubleshooting.md \
   docs/compatibility.md docs/testing.md docs/roadmap.md \
+  docs/design/v0.2-target-context-contract.md \
   docs/research/supabase-cli-project-names.md docs/releases/v0.1.0-release-plan.md; do
   require_file "$doc"
 done
@@ -71,6 +72,7 @@ fi
 for doc in \
   docs/configuration.md docs/data-sources.md docs/labels.md docs/troubleshooting.md \
   docs/compatibility.md docs/testing.md docs/roadmap.md \
+  docs/design/v0.2-target-context-contract.md \
   docs/research/supabase-cli-project-names.md docs/releases/v0.1.0-release-plan.md; do
   if ! grep -Fq "$doc" README.md; then
     fail "README.md must link to $doc"
