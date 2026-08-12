@@ -13,10 +13,9 @@ The section does not invoke the CLI at prompt time. Fixture versions therefore v
 
 `v0.2.0-beta.1` is immutable but rejected and unpublished after its tag release
 gate failed, so it must not be installed or republished. Its successor,
-`v0.2.0-beta.2`, is a maintainer-only private-dogfood candidate, not a stable
-or external-beta approval. It safely rejects the current v2.111.0+ JSON success
-envelope during explicit sync; [#27](https://github.com/junyoung2015/spaceship-supabase/issues/27)
-tracks the successor-candidate repair. Once that repair is released, it retains
+`v0.2.0-beta.2`, is an immutable published prerelease but is superseded for
+current-style explicit sync. `v0.2.0-beta.3` is its maintainer-only
+private-dogfood candidate, not a stable or external-beta approval. It retains
 the supported environment above and adds the
 `spaceship_supabase_sync project` helper as the one explicit exception to the
 no-CLI prompt rule: it requires an installed CLI only when a user invokes it.
@@ -51,7 +50,7 @@ The optional `supabase/.branches/_current_branch` input is a local database-bran
 
 An unsupported, malformed, unreadable, oversized, symlinked, or ambiguous **identity-critical** root/config/live-ref layout is not a compatibility fallback. It renders no segment. This is a security property: a terminal prompt must not turn arbitrary filesystem bytes into trusted context. The local-db branch is optional decoration: an unsafe branch file is omitted while an independently valid live ref remains visible.
 
-The `v0.2.0-beta.2` private-dogfood candidate intentionally does not support:
+The `v0.2.0-beta.3` private-dogfood candidate intentionally does not support:
 
 - `.supabase/project.json`, which belongs to the alpha next/V3 shell rather than
   the stable CLI contract;
@@ -66,7 +65,7 @@ A `.supabase/project.json` adapter is deferred. It can be considered only as an 
 
 An adapter for stable CLI telemetry metadata at
 `supabase/.temp/linked-project.json` is not part of `v0.1.1` or
-`v0.2.0-beta.2` and is a deliberate v0.2/first-external-beta no-go. Although
+`v0.2.0-beta.3` and is a deliberate v0.2/first-external-beta no-go. Although
 recent stable versions write the file,
 it is an undocumented, best-effort name snapshot with no freshness timestamp
 rather than identity authority. Reconsider it only after Supabase publishes a

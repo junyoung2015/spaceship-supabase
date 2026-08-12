@@ -7,24 +7,25 @@ they do not replace the latest stable release.
 
 `v0.2.0-beta.1` is an immutable, rejected, unpublished tag: its tag-triggered
 release gate failed before GitHub publication. Do not install, retag, or
-republish it. `v0.2.0-beta.2` is the sole successor candidate for
-maintainer-only private dogfood. Use the commands below only after its reviewed
-annotated tag has passed the release gate and a GitHub prerelease exists.
+republish it. `v0.2.0-beta.2` is an immutable published prerelease, but its
+current-style explicit-sync path is superseded by `v0.2.0-beta.3`. beta.3 is
+the sole successor candidate for maintainer-only private dogfood. Use the
+commands below only after its reviewed annotated tag has passed the release
+gate and a GitHub prerelease exists.
 
-> **Known beta.2 hold:** with stable current-style v2.111.0+ output, the
-> beta.2 explicit sync helper rejects `{ "projects": [...], "message": "" }`
-> fail-closed and saves no state. [#27](https://github.com/junyoung2015/spaceship-supabase/issues/27)
-> tracks the narrow parser repair; wait for its successor prerelease before
-> dogfooding current-style project-name sync. This does not affect normal
-> local live-ref rendering.
+> **beta.3 candidate scope:** beta.3 carries the narrow [#27](https://github.com/junyoung2015/spaceship-supabase/issues/27)
+> repair for the stable current-style v2.111.0+ `{ "projects": [...],
+> "message": "" }` envelope. It still rejects missing, unknown, duplicate,
+> malformed, escaped, or nonempty companion fields and saves no state on a
+> failure. Normal local live-ref rendering is unaffected.
 
 ## Install or move to a reviewed beta
 
-For a new installation after beta.2 is published, pin the exact tag while
+For a new installation after beta.3 is published, pin the exact tag while
 cloning:
 
 ```zsh
-release_tag='v0.2.0-beta.2'
+release_tag='v0.2.0-beta.3'
 git clone --depth 1 --branch "$release_tag" https://github.com/junyoung2015/spaceship-supabase.git \
   "$HOME/.local/share/spaceship-supabase"
 ```
@@ -33,7 +34,7 @@ For an existing clone, inspect the exact tag before checking it out:
 
 ```zsh
 plugin_dir="$HOME/.local/share/spaceship-supabase"
-release_tag='v0.2.0-beta.2'
+release_tag='v0.2.0-beta.3'
 
 git -C "$plugin_dir" fetch --tags --prune origin
 git -C "$plugin_dir" show --no-patch --format=fuller "$release_tag"
