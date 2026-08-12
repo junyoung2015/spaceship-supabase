@@ -23,6 +23,8 @@ another command-specific override can still direct an operation elsewhere.
   [`docs/releases/v0.1.0-release-plan.md`](releases/v0.1.0-release-plan.md).
 - Current source research:
   [`docs/research/supabase-cli-project-names.md`](research/supabase-cli-project-names.md).
+- Accepted v0.2 product contract:
+  [`docs/design/v0.2-target-context-contract.md`](design/v0.2-target-context-contract.md).
 
 The milestone has no calendar deadline. It closes when its outcome and safety
 gates are met.
@@ -139,10 +141,12 @@ name.
 
 ### Delivery sequence
 
-1. **Lock the target-context vocabulary and provenance UX.** Define exactly
-   what `project name`, `user label`, `configured environment`, `hosted preview
-   branch`, and `local database branch` mean. Decide the smallest display that
-   makes a dangerous mismatch visible while retaining the full ref.
+1. **Lock the target-context vocabulary and provenance UX.** The accepted
+   [`v0.2 target-context contract`](design/v0.2-target-context-contract.md)
+   defines exactly what `project name`, `manual label`, `configured mapping`,
+   `hosted branch`, and `local database branch` mean; it also freezes the
+   smallest readable forms, privacy defaults, and decoration precedence before
+   feature code begins.
 2. **Make manual custom names first-class.** Improve discovery, examples, and
    diagnostics around the existing ref-keyed label workflow. This is the most
    dependable way to express operational vocabulary such as `Production` or
