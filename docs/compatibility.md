@@ -14,9 +14,10 @@ The section does not invoke the CLI at prompt time. Fixture versions therefore v
 `v0.2.0-beta.1` is immutable but rejected and unpublished after its tag release
 gate failed, so it must not be installed or republished. Its successor,
 `v0.2.0-beta.2`, is an immutable published prerelease but is superseded for
-current-style explicit sync. `v0.2.0-beta.3` is its maintainer-only
-private-dogfood candidate, not a stable or external-beta approval. It retains
-the supported environment above and adds the
+current-style explicit sync. `v0.2.0-beta.3` is immutable and carried that
+bounded parser repair. Its `v0.2.0-beta.4` maintainer-only private-dogfood
+successor is not a stable or external-beta approval. It retains the supported
+environment above and adds the
 `spaceship_supabase_sync project` helper as the one explicit exception to the
 no-CLI prompt rule: it requires an installed CLI only when a user invokes it.
 Its compatibility path is deliberately narrow:
@@ -32,6 +33,17 @@ Its compatibility path is deliberately narrow:
 The helper is not a remote adapter for prompt rendering, telemetry metadata,
 or hosted branches. A missing, unsupported, failing, or differently shaped CLI
 output saves no state and leaves normal prompt behavior local-only.
+
+## Prompt layout
+
+beta.4's documented registration guard supports Spaceship Prompt v4's optional
+`line_sep` section. When `line_sep` is present, it registers `supabase` before
+it so the identity appears with status/context information. When no separator
+is present, it falls back to registration before `char`. The plugin does not
+set `SPACESHIP_PROMPT_SEPARATE_LINE`; with its default `true` value, the
+identity remains on the first status/context line and `char` remains on the
+next line. A user can choose a one-line prompt, or explicitly register the
+section before `char` to show it with the prompt character.
 
 ## Stable layout contract
 
@@ -50,7 +62,7 @@ The optional `supabase/.branches/_current_branch` input is a local database-bran
 
 An unsupported, malformed, unreadable, oversized, symlinked, or ambiguous **identity-critical** root/config/live-ref layout is not a compatibility fallback. It renders no segment. This is a security property: a terminal prompt must not turn arbitrary filesystem bytes into trusted context. The local-db branch is optional decoration: an unsafe branch file is omitted while an independently valid live ref remains visible.
 
-The `v0.2.0-beta.3` private-dogfood candidate intentionally does not support:
+The `v0.2.0-beta.4` private-dogfood candidate intentionally does not support:
 
 - `.supabase/project.json`, which belongs to the alpha next/V3 shell rather than
   the stable CLI contract;
@@ -65,7 +77,7 @@ A `.supabase/project.json` adapter is deferred. It can be considered only as an 
 
 An adapter for stable CLI telemetry metadata at
 `supabase/.temp/linked-project.json` is not part of `v0.1.1` or
-`v0.2.0-beta.3` and is a deliberate v0.2/first-external-beta no-go. Although
+`v0.2.0-beta.4` and is a deliberate v0.2/first-external-beta no-go. Although
 recent stable versions write the file,
 it is an undocumented, best-effort name snapshot with no freshness timestamp
 rather than identity authority. Reconsider it only after Supabase publishes a

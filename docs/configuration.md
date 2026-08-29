@@ -27,6 +27,44 @@ Put settings in `.zshrc`, preferably before your prompt is first drawn. All prom
 
 An unsupported `SPACESHIP_SUPABASE_FORMAT` is fail-closed: it renders no segment. With debug enabled it may emit the fixed `UNSUPPORTED_FORMAT` diagnostic code, never an interpolated value.
 
+## Prompt placement
+
+Prompt placement is owned by Spaceship, not by the Supabase identity resolver.
+The beta.4 installation guard places `supabase` before a present `line_sep`, so
+the full identity stays with the status/context sections when Spaceship uses
+its normal two-line layout. When no `line_sep` is in the prompt order, the guard
+falls back to placing the section before `char`.
+
+With `SPACESHIP_PROMPT_SEPARATE_LINE=true` (the Spaceship default), the desired
+physical layout is:
+
+```text
+<status and context> 🔷 abcdefghijklmnopqrst
+➜
+```
+
+```zsh
+if (( ${SPACESHIP_PROMPT_ORDER[(Ie)supabase]} == 0 )); then
+  if (( ${SPACESHIP_PROMPT_ORDER[(Ie)line_sep]} != 0 )); then
+    spaceship add --before line_sep supabase
+  else
+    spaceship add --before char supabase
+  fi
+fi
+```
+
+This does not change `SPACESHIP_PROMPT_SEPARATE_LINE`; leave it at its default
+`true` value to retain the two-line layout above. To use one physical prompt
+line instead, set the global Spaceship option yourself:
+
+```zsh
+SPACESHIP_PROMPT_SEPARATE_LINE=false
+```
+
+To opt into the prompt-character line instead, register the section before
+`char` directly. Placement changes neither identity resolution nor the accepted
+display forms below.
+
 ## Supported formats
 
 The default is the truthful live-reference display:

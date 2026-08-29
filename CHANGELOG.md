@@ -6,6 +6,20 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.2.0-beta.4]
+
+### Changed
+
+- Made the documented default registration place `supabase` before Spaceship's
+  optional `line_sep`, so the normal two-line prompt keeps the full validated
+  project identity on its status/context line and keeps the prompt character
+  on the following line.
+- Documented the two explicit layout choices that remain user-owned: disable
+  `SPACESHIP_PROMPT_SEPARATE_LINE` for one physical prompt line, or register
+  before `char` to place the identity beside the prompt character.
+- Superseded the immutable `v0.2.0-beta.3` candidate without changing prompt
+  rendering, identity selection, sync scope, or the local-only trust boundary.
+
 ## [0.2.0-beta.3]
 
 ### Fixed

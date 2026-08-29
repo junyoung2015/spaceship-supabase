@@ -20,8 +20,14 @@ another command-specific override can still direct an operation elsewhere.
 - Published private-dogfood prerelease: `v0.2.0-beta.2`. It remains immutable,
   but its current-style explicit-sync path is superseded after dogfood found a
   fail-closed envelope incompatibility.
-- Private-dogfood release candidate: `v0.2.0-beta.3`. [#27](https://github.com/junyoung2015/spaceship-supabase/issues/27)
-  landed the narrow parser repair; beta.3 may publish only as a reviewed
+- Historical private-dogfood candidate: `v0.2.0-beta.3` is immutable and
+  carries [#27](https://github.com/junyoung2015/spaceship-supabase/issues/27)'s
+  narrow parser repair.
+- Private-dogfood successor candidate: `v0.2.0-beta.4` retains beta.3's
+  bounded sync scope and makes only the host-owned default registration change
+  that places the section before a present `line_sep`, leaving the identity on
+  the first status/context line and the prompt character on the next in
+  Spaceship's default two-line layout. It may publish only as a reviewed
   annotated tag and is neither a stable release nor approval for external or
   phase-2-alpha invitations.
 - Active product milestone: [`v0.2.0`](https://github.com/junyoung2015/spaceship-supabase/milestone/1)
@@ -160,15 +166,15 @@ name.
    branch`, and `local database branch`; it also fixes the readable forms,
    privacy defaults, and decoration precedence. Feature work does not reopen
    those semantics without a new product decision.
-2. **Keep the beta.1-defined enrichment narrow.** The `v0.2.0-beta.3`
-   candidate carries [#6](https://github.com/junyoung2015/spaceship-supabase/issues/6):
+2. **Keep the beta.1-defined enrichment narrow.** The `v0.2.0-beta.4`
+   candidate retains [#6](https://github.com/junyoung2015/spaceship-supabase/issues/6):
    an explicit, user-confirmed top-level project sync that matches only the
    current valid live ref through a user-invoked Supabase CLI action and saves a
    separate provenance-aware `synced:project` decoration. It never overwrites a
-   manual label and never runs from prompt rendering. beta.3 adds no customer
-   feature beyond this scope. It includes the narrowly bounded [#27](https://github.com/junyoung2015/spaceship-supabase/issues/27)
+   manual label and never runs from prompt rendering. beta.4 retains the
+   narrowly bounded [#27](https://github.com/junyoung2015/spaceship-supabase/issues/27)
    repair for the fixed current CLI envelope, not a relaxation of source
-   validation.
+   validation, and changes only the documented host-owned prompt placement.
 3. **Retain proof that the beta candidate cannot weaken the prompt.**
    [#7](https://github.com/junyoung2015/spaceship-supabase/issues/7) provides
    the fake-CLI boundary, separate-state, actual Spaceship v4 injection,
@@ -178,7 +184,8 @@ name.
    [#14](https://github.com/junyoung2015/spaceship-supabase/issues/14) provides
    the guarded annotated `v0.2.0-beta.N` prerelease path. beta.1 is rejected
    and unpublished; beta.2 is published but superseded for current-style sync;
-   beta.3 is the sole maintainer-private-dogfood candidate.
+   beta.3 is immutable; beta.4 is the sole maintainer-private-dogfood
+   candidate.
    [#15](https://github.com/junyoung2015/spaceship-supabase/issues/15)
    provides the redacted go/extend/pause evidence structure; its working term
    “Dongtan report” remains undefined until the board supplies the audience,
@@ -214,7 +221,7 @@ order without duplicating open/closed state in this document.
 | [#19 — v0.2.0-beta.1 private dogfood prerelease](https://github.com/junyoung2015/spaceship-supabase/issues/19) | Historical rejected/unpublished beta.1 candidate; preserve its failed-gate evidence and do not retag or publish it. | #6–#8, #14 |
 | [#25 — v0.2.0-beta.2 private dogfood prerelease](https://github.com/junyoung2015/spaceship-supabase/issues/25) | Cut the successor candidate with only merged release/test reliability fixes; no new customer feature or external-beta approval. | #6–#8, #14, #19 |
 | [#27 — current CLI JSON envelope compatibility](https://github.com/junyoung2015/spaceship-supabase/issues/27) | Accept the stable `{ projects, message: "" }` explicit-sync envelope without weakening bounded validation. | #6, #7, #25 |
-| [#29 — v0.2.0-beta.3 private dogfood prerelease](https://github.com/junyoung2015/spaceship-supabase/issues/29) | Publish the successor candidate carrying only #27's bounded current-CLI compatibility repair. | #6–#8, #14, #25, #27 |
+| [#29 — v0.2.0-beta.3 private dogfood prerelease](https://github.com/junyoung2015/spaceship-supabase/issues/29) | Historical beta.3 candidate carrying only #27's bounded current-CLI compatibility repair; beta.4 is its successor candidate with only a documented host-layout default and must receive its own immutable tag. | #6–#8, #14, #25, #27 |
 | [#9 — v0.2.0 release](https://github.com/junyoung2015/spaceship-supabase/issues/9) | Dogfood, pass the release gate, tag, and publish the stable release. | #3, #4, #6–#8, #13–#15 |
 
 ### Release acceptance

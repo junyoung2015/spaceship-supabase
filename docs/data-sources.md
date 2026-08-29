@@ -2,6 +2,12 @@
 
 `spaceship-supabase` uses a small, fail-closed local data contract. It does not call the Supabase CLI, a network service, package runtime, or credential provider while rendering a prompt.
 
+The beta.4 installation guard may place the rendered section before Spaceship's
+optional `line_sep` so it stays on the first status/context line, with the
+prompt character on the following line in Spaceship's default two-line layout.
+That presentation choice does not change root selection, data sources,
+precedence, or the fresh per-render read described below.
+
 ## Stable CLI layout
 
 The supported layout is the stable Supabase CLI layout exercised by the included v2.72.7 and v2.113.0 fixtures:

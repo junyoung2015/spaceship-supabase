@@ -9,23 +9,29 @@ they do not replace the latest stable release.
 release gate failed before GitHub publication. Do not install, retag, or
 republish it. `v0.2.0-beta.2` is an immutable published prerelease, but its
 current-style explicit-sync path is superseded by `v0.2.0-beta.3`. beta.3 is
-the sole successor candidate for maintainer-only private dogfood. Use the
-commands below only after its reviewed annotated tag has passed the release
-gate and a GitHub prerelease exists.
+immutable and carried the narrow [#27](https://github.com/junyoung2015/spaceship-supabase/issues/27)
+repair for the stable current-style envelope. `v0.2.0-beta.4` is the sole
+successor candidate for maintainer-only private dogfood. Use the commands below
+only after its reviewed annotated tag has passed the release gate and a GitHub
+prerelease exists.
 
-> **beta.3 candidate scope:** beta.3 carries the narrow [#27](https://github.com/junyoung2015/spaceship-supabase/issues/27)
-> repair for the stable current-style v2.111.0+ `{ "projects": [...],
-> "message": "" }` envelope. It still rejects missing, unknown, duplicate,
-> malformed, escaped, or nonempty companion fields and saves no state on a
-> failure. Normal local live-ref rendering is unaffected.
+> **beta.4 candidate scope:** beta.4 retains beta.3's strict support for the
+> v2.111.0+ `{ "projects": [...], "message": "" }` envelope. It adds the
+> documented default that registers the prompt section before Spaceship's
+> optional `line_sep`, keeping the identity on the status/context line and the
+> prompt character on the following line under Spaceship's default two-line
+> layout.
+> It does not change the renderer, prompt-time trust boundary, or explicit-sync
+> scope. Missing, unknown, duplicate, malformed, escaped, or nonempty companion
+> fields still save no state.
 
 ## Install or move to a reviewed beta
 
-For a new installation after beta.3 is published, pin the exact tag while
+For a new installation after beta.4 is published, pin the exact tag while
 cloning:
 
 ```zsh
-release_tag='v0.2.0-beta.3'
+release_tag='v0.2.0-beta.4'
 git clone --depth 1 --branch "$release_tag" https://github.com/junyoung2015/spaceship-supabase.git \
   "$HOME/.local/share/spaceship-supabase"
 ```
@@ -34,7 +40,7 @@ For an existing clone, inspect the exact tag before checking it out:
 
 ```zsh
 plugin_dir="$HOME/.local/share/spaceship-supabase"
-release_tag='v0.2.0-beta.3'
+release_tag='v0.2.0-beta.4'
 
 git -C "$plugin_dir" fetch --tags --prune origin
 git -C "$plugin_dir" show --no-patch --format=fuller "$release_tag"
@@ -67,6 +73,14 @@ exec zsh
 
 The checkout is deliberately detached: it keeps the installed prompt tied to
 the tag you inspected and prevents `git pull` from silently moving it.
+
+After sourcing the beta, use the documented registration guard in the README.
+Its default puts the section before a present `line_sep`, producing
+`<status/context> 🔷 <ref>` followed by `➜` on the next line when
+`SPACESHIP_PROMPT_SEPARATE_LINE=true` (the Spaceship default). To show the
+whole prompt on one physical line, set `SPACESHIP_PROMPT_SEPARATE_LINE=false`;
+to put the identity beside the prompt character, explicitly register it before
+`char`.
 
 ## Send ordinary feedback safely
 
