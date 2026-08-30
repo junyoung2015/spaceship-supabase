@@ -169,10 +169,21 @@ so it appears with the status/context line in the standard two-line layout:
 Keep `SPACESHIP_PROMPT_SEPARATE_LINE=true` (the Spaceship default) for this
 layout.
 
-If `🔷` touches the preceding section, ensure the section has not been given an
-empty prefix. beta.4 defaults `SPACESHIP_SUPABASE_PREFIX` to `"at "`, which
-both names the project as target/context and supplies the separating whitespace.
-Do not work around it by adding a leading space to `SPACESHIP_SUPABASE_SYMBOL`.
+If `at 🔷` touches the preceding section, do not add leading whitespace to the
+Supabase prefix or symbol. The normal boundary belongs to the preceding
+Spaceship v4 section's suffix. beta.4's `SPACESHIP_SUPABASE_PREFIX="at "` names
+the project as target/context and separates `at` from `🔷`, but it deliberately
+does not add a second space before itself.
+
+One known case is the third-party `spaceship-ip` plugin loaded through Oh My
+Zsh's `plugins=(...)` list: it loads before Spaceship core defines the default
+suffix and retains an empty IP suffix. After sourcing Spaceship core, set:
+
+```zsh
+SPACESHIP_IP_SUFFIX="$SPACESHIP_PROMPT_DEFAULT_SUFFIX"
+```
+
+Then reload the shell. The adjacent segments should read `… @ <ip> at 🔷 <ref>`.
 
 To make every section and the prompt character use one physical line, set the
 global Spaceship option:

@@ -46,6 +46,28 @@ separates it from the preceding context, and `char` remains on the next line.
 A user can choose a one-line prompt, explicitly register the section before
 `char` to show it with the prompt character, or set an empty section prefix.
 
+## Third-party section load order
+
+Spaceship v4 composes a boundary from the **preceding** section's suffix; the
+next section's prefix does not insert whitespace before itself. The default
+Supabase prefix is therefore `at `, not ` at `, so it joins correctly after
+ordinary v4 sections without double spaces.
+
+The third-party `spaceship-ip` plugin initializes from
+`SPACESHIP_PROMPT_DEFAULT_SUFFIX`. When it is loaded through Oh My Zsh's
+`plugins=(...)` list, that occurs before Spaceship core declares the default
+suffix, leaving `SPACESHIP_IP_SUFFIX` empty for the remainder of that shell.
+After sourcing Spaceship core, restore the standard IP suffix before registering
+sections:
+
+```zsh
+SPACESHIP_IP_SUFFIX="$SPACESHIP_PROMPT_DEFAULT_SUFFIX"
+```
+
+This is local shell configuration, not a Supabase identity or rendering-policy
+change. It preserves `… @ <ip> at 🔷 <ref>`; users who want a custom IP suffix
+can set that explicit value here instead of the default-suffix assignment.
+
 ## Stable layout contract
 
 The supported layout is:

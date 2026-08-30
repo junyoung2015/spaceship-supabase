@@ -29,10 +29,16 @@ An unsupported `SPACESHIP_SUPABASE_FORMAT` is fail-closed: it renders no segment
 
 The default `at ` prefix identifies the resolved reference as linked target/context
 information and supplies the separator before `🔷`; the symbol itself remains
-`"🔷 "`. Do not add leading whitespace to the symbol to create that separator.
-Set `SPACESHIP_SUPABASE_PREFIX=''` only when a deliberately compact prompt style
-is preferred. Spaceship hides the prefix of its first effective section by
-default, so a standalone section can still begin directly with `🔷`.
+`"🔷 "`. It is not a leading separator for the whole section: in standard
+Spaceship v4 composition, the preceding section's suffix (normally
+`SPACESHIP_PROMPT_DEFAULT_SUFFIX`, a space) provides the boundary before `at `.
+Do not add leading whitespace to the prefix or symbol to compensate for a
+preceding third-party section with an empty suffix. Set
+`SPACESHIP_SUPABASE_PREFIX=''` only when a deliberately compact prompt style is
+preferred. Spaceship hides the prefix of its first effective section by default,
+so a standalone section can still begin directly with `🔷`. See
+[compatibility](compatibility.md#third-party-section-load-order) for the
+Oh My Zsh `spaceship-ip` case.
 
 ## Prompt placement
 

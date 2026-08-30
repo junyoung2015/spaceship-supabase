@@ -87,6 +87,22 @@ if (( ${SPACESHIP_PROMPT_ORDER[(Ie)supabase]} == 0 )); then
 fi
 ```
 
+#### Oh My Zsh `spaceship-ip` compatibility
+
+If `spaceship-ip` is also in Oh My Zsh's `plugins=(...)` list, Oh My Zsh loads
+it before Spaceship initializes its default section suffix. Directly after the
+command that sources Spaceship core, restore the IP section's normal trailing
+separator before adding the IP or Supabase sections:
+
+```zsh
+source /path/to/spaceship.zsh
+SPACESHIP_IP_SUFFIX="$SPACESHIP_PROMPT_DEFAULT_SUFFIX"
+```
+
+That produces `… @ <ip> at 🔷 <ref>`. Do not add leading whitespace to
+`SPACESHIP_SUPABASE_PREFIX` or `SPACESHIP_SUPABASE_SYMBOL`: standard
+Spaceship v4 sections own the separator after their own content.
+
 Restart the shell or run `source ~/.zshrc`.
 
 ### Generic Zsh

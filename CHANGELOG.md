@@ -21,6 +21,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Documented the two explicit layout choices that remain user-owned: disable
   `SPACESHIP_PROMPT_SEPARATE_LINE` for one physical prompt line, or register
   before `char` to place the identity beside the prompt character.
+- Documented the Oh My Zsh `spaceship-ip` load-order compatibility setting.
+  Reapplying its suffix after Spaceship core initialization preserves the
+  standard boundary before the Supabase `at ` context marker.
 - Superseded the immutable `v0.2.0-beta.3` candidate without changing identity
   selection, sync scope, or the local-only trust boundary.
 
