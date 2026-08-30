@@ -14,9 +14,10 @@ The exact reference remains visible. If live identity disappears, is malformed, 
 
 Prompt placement is independent of labels. The beta.4 installation default
 places the section on Spaceship's first status/context line before a present
-`line_sep`, leaving the prompt character on the next line in the default
-two-line layout; it neither changes a label's eligibility nor causes label
-state to be read or written differently.
+`line_sep`, prefixes it with `at ` when it follows earlier prompt context, and
+leaves the prompt character on the next line in the default two-line layout;
+it neither changes a label's eligibility nor causes label state to be read or
+written differently.
 
 ## Storage
 

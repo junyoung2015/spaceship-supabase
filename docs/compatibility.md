@@ -41,9 +41,10 @@ beta.4's documented registration guard supports Spaceship Prompt v4's optional
 it so the identity appears with status/context information. When no separator
 is present, it falls back to registration before `char`. The plugin does not
 set `SPACESHIP_PROMPT_SEPARATE_LINE`; with its default `true` value, the
-identity remains on the first status/context line and `char` remains on the
-next line. A user can choose a one-line prompt, or explicitly register the
-section before `char` to show it with the prompt character.
+identity remains on the first status/context line, its default `at ` prefix
+separates it from the preceding context, and `char` remains on the next line.
+A user can choose a one-line prompt, explicitly register the section before
+`char` to show it with the prompt character, or set an empty section prefix.
 
 ## Stable layout contract
 

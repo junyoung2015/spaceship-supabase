@@ -24,12 +24,13 @@ another command-specific override can still direct an operation elsewhere.
   carries [#27](https://github.com/junyoung2015/spaceship-supabase/issues/27)'s
   narrow parser repair.
 - Private-dogfood successor candidate: `v0.2.0-beta.4` retains beta.3's
-  bounded sync scope and makes only the host-owned default registration change
-  that places the section before a present `line_sep`, leaving the identity on
-  the first status/context line and the prompt character on the next in
-  Spaceship's default two-line layout. It may publish only as a reviewed
-  annotated tag and is neither a stable release nor approval for external or
-  phase-2-alpha invitations.
+  bounded sync scope and makes the host-owned default registration change that
+  places the section before a present `line_sep`, leaving the identity on the
+  first status/context line and the prompt character on the next in Spaceship's
+  default two-line layout, plus the visual `at ` prefix that marks the linked
+  project as context. It may publish only as a reviewed annotated tag and is
+  neither a stable release nor approval for external or phase-2-alpha
+  invitations.
 - Active product milestone: [`v0.2.0`](https://github.com/junyoung2015/spaceship-supabase/milestone/1)
   — human-readable target context.
 - Active work tracker: the GitHub Issues mapped below and assigned to that

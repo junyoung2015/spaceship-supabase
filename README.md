@@ -13,6 +13,11 @@
 
 That default segment means a valid local linked-project reference was found beneath the current project boundary. It does **not** automatically claim a friendly project name, a hosted Supabase Branch, remote status, credentials, network freshness, or the state of a deployment. The full 20-character reference is always shown so the prompt remains unambiguous.
 
+When it follows another prompt section, beta.4's default contextual prefix is
+`at `, so a normal prompt reads `… at 🔷 abcdefghijklmnopqrst`. Spaceship hides
+the prefix of its first effective section by default, which is why the compact
+standalone example above begins directly with the symbol.
+
 The `v0.2.0-beta.4` candidate carries one explicitly confirmed, point-in-time
 project-name decoration after a user runs a command. It remains off by default,
 keeps the full ref visible, says `synced:project`, and never does a remote
@@ -35,8 +40,9 @@ context. The stable `v0.1.1` release establishes a truthful full-ref safety
 baseline, with a ref-only default display. The `v0.2.0-beta.4` private-dogfood
 candidate carries the beta.1-defined behavior without adding prompt-time network
 access or hiding the authoritative ref. It retains beta.3's merged current-CLI
-compatibility repair and adds only documented, host-owned prompt placement. The
-accepted vocabulary, exact v0.2 prompt forms, privacy defaults, and
+compatibility repair and adds documented, host-owned prompt placement plus the
+contextual `at ` prefix for a linked project target. The accepted vocabulary,
+exact v0.2 prompt forms, privacy defaults, and
 manual-label/synced-decoration precedence are recorded in the [v0.2 target-context contract](docs/design/v0.2-target-context-contract.md).
 
 ## Requirements
@@ -119,7 +125,7 @@ layout (`SPACESHIP_PROMPT_SEPARATE_LINE=true`, the Spaceship default). Its
 intended shape is:
 
 ```text
-<status and context> 🔷 abcdefghijklmnopqrst
+<status and context> at 🔷 abcdefghijklmnopqrst
 ➜
 ```
 
@@ -188,6 +194,9 @@ If `project-ref` contains exactly 20 lowercase letters, the next prompt includes
 🔷 abcdefghijklmnopqrst
 ```
 
+When this section follows other prompt context—as it does in the documented
+beta.4 registration—the visible form is `at 🔷 abcdefghijklmnopqrst`.
+
 If no segment appears, that is normally intentional fail-closed behavior. Start with [troubleshooting](docs/troubleshooting.md) rather than loosening file permissions or adding shell parsing commands.
 
 ## Common controls
@@ -197,6 +206,8 @@ The default is compact and uses the live local reference:
 ```zsh
 SPACESHIP_SUPABASE_SHOW=true
 SPACESHIP_SUPABASE_FORMAT="ref"
+# Default: "at "; set an explicit empty string to suppress the contextual prefix.
+SPACESHIP_SUPABASE_PREFIX="at "
 ```
 
 You may add a local, manually maintained label while retaining the exact reference:

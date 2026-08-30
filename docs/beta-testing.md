@@ -18,12 +18,13 @@ prerelease exists.
 > **beta.4 candidate scope:** beta.4 retains beta.3's strict support for the
 > v2.111.0+ `{ "projects": [...], "message": "" }` envelope. It adds the
 > documented default that registers the prompt section before Spaceship's
-> optional `line_sep`, keeping the identity on the status/context line and the
-> prompt character on the following line under Spaceship's default two-line
-> layout.
-> It does not change the renderer, prompt-time trust boundary, or explicit-sync
-> scope. Missing, unknown, duplicate, malformed, escaped, or nonempty companion
-> fields still save no state.
+> optional `line_sep`, uses the contextual `at ` prefix before the project
+> symbol, keeps the identity on the status/context line, and leaves the prompt
+> character on the following line under Spaceship's default two-line layout.
+> It does not change identity resolution, the prompt-time trust boundary, or
+> explicit-sync scope. Missing, unknown, duplicate, malformed, escaped, or
+> nonempty companion fields still save no state. An explicit empty section
+> prefix remains a user-owned compact-style opt-out.
 
 ## Install or move to a reviewed beta
 
@@ -76,7 +77,7 @@ the tag you inspected and prevents `git pull` from silently moving it.
 
 After sourcing the beta, use the documented registration guard in the README.
 Its default puts the section before a present `line_sep`, producing
-`<status/context> 🔷 <ref>` followed by `➜` on the next line when
+`<status/context> at 🔷 <ref>` followed by `➜` on the next line when
 `SPACESHIP_PROMPT_SEPARATE_LINE=true` (the Spaceship default). To show the
 whole prompt on one physical line, set `SPACESHIP_PROMPT_SEPARATE_LINE=false`;
 to put the identity beside the prompt character, explicitly register it before

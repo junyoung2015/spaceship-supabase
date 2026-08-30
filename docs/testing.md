@@ -36,7 +36,7 @@ The suite verifies behavior rather than xtrace-derived coverage percentages. Cri
 - fresh same-directory rereads after a local `project-ref` or local DB-branch change;
 - local DB branch state is ignored by default and unambiguously labeled when enabled;
 - dangerous `%`, ESC/CSI/OSC, whitespace, Unicode/control, and symlink payloads never reach actual Spaceship v4 rendered prompt bytes;
-- the documented idempotent registration guard adds exactly one `supabase` section before `line_sep` when it is present (otherwise before `char`), keeps the full ref on the first status/context line of a real vendored Spaceship v4 two-line prompt, keeps `char` on the following line, and retains the explicit prompt-line placement option;
+- the documented idempotent registration guard adds exactly one `supabase` section before `line_sep` when it is present (otherwise before `char`), renders its default `at ` prefix after earlier context through a real vendored Spaceship v4 renderer, keeps the full ref on the first status/context line of a two-line prompt, keeps `char` on the following line, and retains the explicit prompt-line placement option;
 - labels cannot revive an identity and their helper commands preserve privacy, permissions, and atomic update behavior; and
 - prompt rendering makes no writes, network calls, Supabase CLI calls, Python/Node/jq calls, or credential reads.
 

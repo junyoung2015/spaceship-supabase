@@ -162,12 +162,17 @@ does. The beta.4 default registration places the identity before that separator,
 so it appears with the status/context line in the standard two-line layout:
 
 ```text
-<status and context> 🔷 abcdefghijklmnopqrst
+<status and context> at 🔷 abcdefghijklmnopqrst
 ➜
 ```
 
 Keep `SPACESHIP_PROMPT_SEPARATE_LINE=true` (the Spaceship default) for this
 layout.
+
+If `🔷` touches the preceding section, ensure the section has not been given an
+empty prefix. beta.4 defaults `SPACESHIP_SUPABASE_PREFIX` to `"at "`, which
+both names the project as target/context and supplies the separating whitespace.
+Do not work around it by adding a leading space to `SPACESHIP_SUPABASE_SYMBOL`.
 
 To make every section and the prompt character use one physical line, set the
 global Spaceship option:

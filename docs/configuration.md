@@ -1,6 +1,6 @@
 # Configuration
 
-`spaceship-supabase` has a deliberately small configuration surface. Its identity display is always a full, validated 20-character project reference. There are no arbitrary templates, prefix/truncation settings, project-name-only modes, branch-only modes, or automatic remote lookups.
+`spaceship-supabase` has a deliberately small configuration surface. Its identity display is always a full, validated 20-character project reference. There are no arbitrary templates, **reference** prefix/truncation settings, project-name-only modes, branch-only modes, or automatic remote lookups.
 
 Put settings in `.zshrc`, preferably before your prompt is first drawn. All prompt rendering remains local and read-only.
 
@@ -12,7 +12,7 @@ Put settings in `.zshrc`, preferably before your prompt is first drawn. All prom
 | `SPACESHIP_SUPABASE_ASYNC` | `true` | `true` or `false` | Spaceship section scheduling preference. The section's own data path remains local and synchronous-safe. |
 | `SPACESHIP_SUPABASE_COLOR` | `cyan` | A Spaceship v4 color value | Color supplied to `spaceship::section::v4`. |
 | `SPACESHIP_SUPABASE_SYMBOL` | `"🔷 "` | User-owned text | Symbol placed before the validated section value. |
-| `SPACESHIP_SUPABASE_PREFIX` | `""` | User-owned text | Prefix supplied to Spaceship. |
+| `SPACESHIP_SUPABASE_PREFIX` | `"at "` | User-owned text | Prefix supplied to Spaceship before the symbol and ref. An explicitly empty value suppresses it. |
 | `SPACESHIP_SUPABASE_SUFFIX` | `"$SPACESHIP_PROMPT_DEFAULT_SUFFIX"` | User-owned text | Suffix supplied to Spaceship. |
 | `SPACESHIP_SUPABASE_FORMAT` | `ref` | `ref` or `label+ref` | Chooses the bare full reference or a safe decoration followed by the full reference. `label+ref` is required before any manual or synced human-readable text can render. |
 | `SPACESHIP_SUPABASE_SHOW_LOCAL_DB_BRANCH` | `false` | `true` or `false` | When enabled, appends a validated `local-db:<name>` marker from the local database-branch file to a live ref only. |
@@ -27,6 +27,13 @@ Put settings in `.zshrc`, preferably before your prompt is first drawn. All prom
 
 An unsupported `SPACESHIP_SUPABASE_FORMAT` is fail-closed: it renders no segment. With debug enabled it may emit the fixed `UNSUPPORTED_FORMAT` diagnostic code, never an interpolated value.
 
+The default `at ` prefix identifies the resolved reference as linked target/context
+information and supplies the separator before `🔷`; the symbol itself remains
+`"🔷 "`. Do not add leading whitespace to the symbol to create that separator.
+Set `SPACESHIP_SUPABASE_PREFIX=''` only when a deliberately compact prompt style
+is preferred. Spaceship hides the prefix of its first effective section by
+default, so a standalone section can still begin directly with `🔷`.
+
 ## Prompt placement
 
 Prompt placement is owned by Spaceship, not by the Supabase identity resolver.
@@ -39,7 +46,7 @@ With `SPACESHIP_PROMPT_SEPARATE_LINE=true` (the Spaceship default), the desired
 physical layout is:
 
 ```text
-<status and context> 🔷 abcdefghijklmnopqrst
+<status and context> at 🔷 abcdefghijklmnopqrst
 ➜
 ```
 
@@ -76,6 +83,10 @@ SPACESHIP_SUPABASE_FORMAT="ref"
 ```text
 🔷 abcdefghijklmnopqrst
 ```
+
+These format examples show the symbol-and-identity payload. In a normal prompt
+after prior context, the default section prefix makes the same result read
+`at 🔷 abcdefghijklmnopqrst` as documented above.
 
 The only alternative retains the exact reference and permits a safe decoration:
 

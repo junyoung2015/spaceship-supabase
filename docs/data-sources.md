@@ -5,8 +5,10 @@
 The beta.4 installation guard may place the rendered section before Spaceship's
 optional `line_sep` so it stays on the first status/context line, with the
 prompt character on the following line in Spaceship's default two-line layout.
-That presentation choice does not change root selection, data sources,
-precedence, or the fresh per-render read described below.
+Its `at ` prefix labels the linked project as target/context information and
+separates it from the preceding section. Those presentation choices do not
+change root selection, data sources, precedence, or the fresh per-render read
+described below.
 
 ## Stable CLI layout
 
