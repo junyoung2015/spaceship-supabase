@@ -43,6 +43,7 @@ than the glyph alone.
 | Emoji variation sequences | [Unicode 17 variation-sequence data](https://www.unicode.org/Public/17.0.0/ucd/emoji/emoji-variation-sequences.txt) | `U+26A1 U+FE0E` requests text presentation and still needs terminal observation. |
 | Nerd Fonts | [v3.5.1 release](https://github.com/ryanoasis/nerd-fonts/releases/tag/v3.5.1) and [pinned registry](https://github.com/ryanoasis/nerd-fonts/blob/b894ea7803af6aade63d60a4381e006098ec9c4d/glyphnames.json) | `dev-supabase` maps to Private Use Area code point `U+E8B6`. |
 | Spaceship renderer | [Audited v4.21.0 renderer](https://github.com/spaceship-prompt/spaceship-prompt/blob/e498b1381df3a122af107b61f5cc8f3ced93ee69/lib/section.zsh#L68-L108) and [repository v4 call](https://github.com/junyoung2015/spaceship-supabase/blob/7aab213c37c63db8f172be3e40a75ec4786fc749/spaceship-supabase.plugin.zsh#L1599-L1609) | Spaceship styles the whole supplied symbol and content payload with the configured color. |
+| PNG provenance boundary | [W3C PNG Specification, Third Edition](https://www.w3.org/TR/png-3/) | PNG supports ancillary chunks beyond text and EXIF. A retained public image needs a strict post-sanitization chunk inventory. |
 | macOS Terminal | [Text settings](https://support.apple.com/guide/terminal/trmltxt/mac) and [advanced settings](https://support.apple.com/guide/terminal/trmladvn/mac) | Profile font, color, encoding, and ambiguous-width settings affect the observation. |
 | iTerm2 | [Font documentation](https://iterm2.com/documentation-fonts.html) and [Unicode documentation](https://iterm2.com/documentation-one-page.html) | Non-ASCII font and Unicode width settings are profile choices. |
 | Kaku | [v0.19.0 release](https://github.com/tw93/Kaku/releases/tag/V0.19.0), [pinned default configuration](https://github.com/tw93/Kaku/blob/9a5cebaf4b065890dfd1e22dd2bf08ae2e8c5153/assets/macos/Kaku.app/Contents/Resources/kaku.lua#L3818-L3860), and [Unicode-width configuration](https://github.com/tw93/Kaku/blob/9a5cebaf4b065890dfd1e22dd2bf08ae2e8c5153/config/src/config.rs#L973-L980) | Kaku also has terminal-specific font-stack and width behavior. |
@@ -163,11 +164,15 @@ following review.
    is synthetic.
 2. Scan printable strings and inspect PNG chunks for text, EXIF, location, or
    other metadata.
-3. Remove embedded EXIF and text chunks while preserving decoded pixels.
-4. Compare decoded pixel hashes before and after metadata removal.
-5. Record dimensions, format, alpha behavior, public blob hash, concise alt
-   text, fixture command, and source-provenance review.
-6. Add an explicit public-tree allowlist entry and metadata requirement before
+3. Decode and re-encode into a fresh PNG that retains only the approved chunk
+   inventory: `IHDR`, `PLTE` when indexed color requires it, `tRNS` when
+   transparency requires it, `IDAT`, and `IEND`.
+4. Enumerate the final chunk inventory and reject the image if any other
+   chunk, including a private or unrecognized ancillary chunk, remains.
+5. Compare decoded pixel hashes before and after re-encoding.
+6. Record dimensions, format, alpha behavior, final chunk inventory, public
+   blob hash, concise alt text, fixture command, and source-provenance review.
+7. Add an explicit public-tree allowlist entry and metadata requirement before
    a new image becomes a release artifact.
 
 The existing [README screenshot record](readme-terminal-screenshot.md) remains
@@ -214,10 +219,19 @@ research record supplies no authorization for that work.
 
 ## Tracker completion boundary
 
-Issue #36 can close after the matrix has controlled visual evidence for all
-supported-terminal rows, the image privacy gate has passed for any retained
-artifact, the recommendation and rejected alternatives have been reviewed, and
-the compatibility, migration, and rollback boundaries remain documented. Until
-then, the exact next research requirement is a disposable macOS account or a
-tool-provided terminal window target that can be verified as isolated before
-any screen content is inspected.
+Issue #36 can close only after every explicitly listed visual cell has a
+complete evidence record. One aggregate result per terminal does not satisfy
+the matrix.
+
+1. Each terminal must cover every listed theme, font or fallback path, layout,
+   candidate, and required observation from the supported-terminal table.
+2. Each cell must contain every field in the required visual-observation
+   schema, including the advance probe and the exact complete-ref legibility
+   result.
+3. The strict image privacy gate must pass for every retained artifact.
+4. The recommendation and rejected alternatives must be reviewed, and the
+   compatibility, migration, and rollback boundaries must remain documented.
+
+Until then, the exact next research requirement is a disposable macOS account
+or a tool-provided terminal window target that can be verified as isolated
+before any screen content is inspected.

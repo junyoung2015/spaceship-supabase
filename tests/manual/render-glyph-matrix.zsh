@@ -168,7 +168,7 @@ source "$repo_root/spaceship-supabase.plugin.zsh"
 
 # This explicit helper write is setup work. The later section render reads the
 # resulting owner-only synthetic label state without writing any state.
-spaceship_supabase_label set 'Customer API / staging' >/dev/null
+spaceship_supabase_label set 'Customer API / staging' >/dev/null || exit 73
 
 spaceship_context() {
   spaceship::section::v4 \
