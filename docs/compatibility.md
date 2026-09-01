@@ -66,7 +66,12 @@ SPACESHIP_IP_SUFFIX="$SPACESHIP_PROMPT_DEFAULT_SUFFIX"
 
 This is local shell configuration, not a Supabase identity or rendering-policy
 change. It preserves `… @ <ip> at 🔷 <ref>`; users who want a custom IP suffix
-can set that explicit value here instead of the default-suffix assignment.
+can set that explicit value here instead of the default-suffix assignment. The
+[pinned upstream analysis](research/spaceship-ip-load-order.md) records the
+exact Oh My Zsh, `spaceship-ip`, and Spaceship revisions behind this guidance.
+The real-v4 integration suite reproduces the load order with synthetic section
+content and verifies both the broken adjacency and the exactly-one-space repair
+without running the third-party plugin's interface-discovery commands.
 
 ## Stable layout contract
 

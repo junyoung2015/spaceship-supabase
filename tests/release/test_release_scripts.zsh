@@ -267,7 +267,7 @@ test_valid_prerelease_preflight_and_dry_run() {
   tmp="$REPLY"
   prepare_release_candidate "$tmp" || return 1
   candidate="$REPLY"
-  # The checked-out candidate may itself be beta.3. Use another valid beta
+  # The checked-out candidate may itself be beta.4. Use another valid beta
   # identifier here so this synthetic fixture owns exactly one matching section.
   commit_release_candidate "$candidate" '0.2.0-beta.7' present || return 1
   mark_candidate_as_main "$candidate" || return 1
@@ -427,6 +427,31 @@ test_duplicate_refusal_and_beta_dry_run() {
   return 0
 }
 
+test_metadata_requires_pinned_compatibility_research() {
+  local tmp='' candidate='' output=''
+  new_test_dir || return 1
+  tmp="$REPLY"
+  prepare_release_candidate "$tmp" || return 1
+  candidate="$REPLY"
+  prepare_exact_prerelease_candidate "$candidate" '0.2.0-beta.4' || return 1
+
+  assert_success 'beta.4 metadata includes its pinned compatibility research' \
+    "$RELEASE_TEST_ZSH" -f "$candidate/.github/scripts/metadata-check.zsh"
+  command git -C "$candidate" rm --cached --quiet -- \
+    docs/research/spaceship-ip-load-order.md || return 1
+  assert_file_exists "$candidate/docs/research/spaceship-ip-load-order.md" \
+    'trackedness fixture leaves the nonempty research file in the worktree'
+  if output="$("$RELEASE_TEST_ZSH" -f "$candidate/.github/scripts/metadata-check.zsh" 2>&1)"; then
+    test_failure 'metadata rejects referenced compatibility research that is present but untracked'
+  fi
+  assert_contains "$output" \
+    'required file is not tracked: docs/research/spaceship-ip-load-order.md' \
+    'metadata failure reaches the trackedness guard'
+
+  cleanup_release_test_dir "$tmp"
+  return 0
+}
+
 test_case 'stable and constrained beta release identifiers are exact' test_stable_and_beta_contract_forms_are_exact
 test_case 'synthetic candidates isolate existing release tags' test_synthetic_candidates_isolate_existing_release_tags
 test_case 'valid stable preflight retains stable creation behavior' test_valid_stable_preflight_and_dry_run
@@ -434,4 +459,5 @@ test_case 'valid beta preflight reaches prerelease creation dry-run' test_valid_
 test_case 'preflight extracts only the literal matching beta changelog section' test_preflight_extracts_only_the_exact_beta_section
 test_case 'preflight rejects mismatched, lightweight, non-main, and missing-note tags' test_release_preflight_rejects_tag_and_history_failures
 test_case 'duplicate refusal and beta release command behavior are retained' test_duplicate_refusal_and_beta_dry_run
+test_case 'metadata requires pinned compatibility research in the release tree' test_metadata_requires_pinned_compatibility_research
 finish_tests

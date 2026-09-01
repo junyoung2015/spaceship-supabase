@@ -10,7 +10,8 @@ source "$script_dir/../helpers/testlib.zsh"
 typeset REF_LIVE='aaaaaaaaaaaaaaaaaaaa'
 
 test_documented_registration_is_idempotent_and_renders() {
-  local tmp='' root='' rendered='' context_line='' prompt_line='' section='' count=0
+  local tmp='' root='' rendered='' rendered_file='' plain='' repaired=''
+  local ip_tuple='' ordinary_tuple='' supabase_tuple='' context_line='' prompt_line='' section='' count=0
   local RETVAL=0
   local -i supabase_index=0 line_sep_index=0 char_index=0
   new_test_dir || return 1
@@ -24,8 +25,14 @@ test_documented_registration_is_idempotent_and_renders() {
   XDG_CONFIG_DIRS="$tmp/config-dirs"
   SPACESHIP_CONFIG="$tmp/missing-spaceship.zsh"
   unset SPACESHIP_ROOT SPACESHIP_CONFIG_PATH SPACESHIP_PROMPT_ORDER SPACESHIP_RPROMPT_ORDER
+  unset SPACESHIP_PROMPT_DEFAULT_SUFFIX SPACESHIP_IP_SUFFIX
   SPACESHIP_PROMPT_ASYNC=false
   zcompile() { return 0; }
+
+  # Oh My Zsh loads plugins before the selected theme. Reproduce the pinned
+  # spaceship-ip default assignment before Spaceship has declared its suffix.
+  SPACESHIP_IP_SUFFIX="${SPACESHIP_IP_SUFFIX="$SPACESHIP_PROMPT_DEFAULT_SUFFIX"}"
+  assert_empty "$SPACESHIP_IP_SUFFIX" 'pre-theme spaceship-ip initialization captures an empty default suffix'
 
   materialize_project "$root" 2.113.0 "$REF_LIVE" || {
     remove_test_dir "$tmp"
@@ -36,6 +43,8 @@ test_documented_registration_is_idempotent_and_renders() {
     remove_test_dir "$tmp"
     return 1
   }
+  assert_eq ' ' "$SPACESHIP_PROMPT_DEFAULT_SUFFIX" 'Spaceship v4 declares one space as its default suffix'
+  assert_empty "$SPACESHIP_IP_SUFFIX" 'Spaceship initialization does not retroactively repair the IP suffix'
   reset_public_configuration
   # Verify the ordinary Spaceship v4 layout that users get by default: sections
   # before line_sep form the first line, and char forms the second.
@@ -44,6 +53,44 @@ test_documented_registration_is_idempotent_and_renders() {
     remove_test_dir "$tmp"
     return 1
   }
+
+  # Render the actual broken boundary through the vendored v4 section API, then
+  # prove that the documented post-theme repair restores exactly one space.
+  rendered_file="$tmp/rendered-prompt"
+  ip_tuple="$(spaceship::section::v4 --symbol '@ ' --suffix "$SPACESHIP_IP_SUFFIX" '192.0.2.1')"
+  supabase_tuple="$(spaceship::section::v4 \
+    --prefix "$SPACESHIP_SUPABASE_PREFIX" \
+    --symbol "$SPACESHIP_SUPABASE_SYMBOL" \
+    "$REF_LIVE")"
+  _spaceship_prompt_opened=false
+  _spaceship_rprompt_opened=false
+  spaceship::section::render "$ip_tuple" > "$rendered_file"
+  spaceship::section::render "$supabase_tuple" >> "$rendered_file"
+  rendered="$(<"$rendered_file")"
+  plain="$(print -P -- "$rendered")"
+  plain=${plain//$'\e'\[[0-9;]#m/}
+  assert_eq '@ 192.0.2.1at 🔷 aaaaaaaaaaaaaaaaaaaa' "$plain" 'empty preceding suffix reproduces the IP and Supabase adjacency'
+
+  SPACESHIP_IP_SUFFIX="$SPACESHIP_PROMPT_DEFAULT_SUFFIX"
+  ip_tuple="$(spaceship::section::v4 --symbol '@ ' --suffix "$SPACESHIP_IP_SUFFIX" '192.0.2.1')"
+  _spaceship_prompt_opened=false
+  _spaceship_rprompt_opened=false
+  spaceship::section::render "$ip_tuple" > "$rendered_file"
+  spaceship::section::render "$supabase_tuple" >> "$rendered_file"
+  rendered="$(<"$rendered_file")"
+  repaired="$(print -P -- "$rendered")"
+  repaired=${repaired//$'\e'\[[0-9;]#m/}
+  assert_eq '@ 192.0.2.1 at 🔷 aaaaaaaaaaaaaaaaaaaa' "$repaired" 'post-theme IP suffix repair restores exactly one standard boundary'
+
+  ordinary_tuple="$(spaceship::section::v4 --symbol 'ctx ' --suffix "$SPACESHIP_PROMPT_DEFAULT_SUFFIX" 'value')"
+  _spaceship_prompt_opened=false
+  _spaceship_rprompt_opened=false
+  spaceship::section::render "$ordinary_tuple" > "$rendered_file"
+  spaceship::section::render "$supabase_tuple" >> "$rendered_file"
+  rendered="$(<"$rendered_file")"
+  plain="$(print -P -- "$rendered")"
+  plain=${plain//$'\e'\[[0-9;]#m/}
+  assert_eq 'ctx value at 🔷 aaaaaaaaaaaaaaaaaaaa' "$plain" 'ordinary v4 suffix and Supabase prefix retain exactly one boundary'
 
   assert_eq 0 "${SPACESHIP_PROMPT_ORDER[(Ie)supabase]}" 'external section is not implicitly registered by sourcing'
 
@@ -137,5 +184,5 @@ test_documented_registration_is_idempotent_and_renders() {
   return 0
 }
 
-test_case 'documented Spaceship registration is idempotent and renders' test_documented_registration_is_idempotent_and_renders
+test_case 'documented registration and third-party boundary repair render through Spaceship v4' test_documented_registration_is_idempotent_and_renders
 finish_tests

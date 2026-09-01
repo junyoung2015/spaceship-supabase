@@ -27,9 +27,11 @@ Put settings in `.zshrc`, preferably before your prompt is first drawn. All prom
 
 An unsupported `SPACESHIP_SUPABASE_FORMAT` is fail-closed: it renders no segment. With debug enabled it may emit the fixed `UNSUPPORTED_FORMAT` diagnostic code, never an interpolated value.
 
-The default `at ` prefix identifies the resolved reference as linked target/context
+The default `at ` prefix presents the resolved reference as target/context
 information and supplies the separator before `🔷`; the symbol itself remains
-`"🔷 "`. It is not a leading separator for the whole section: in standard
+`"🔷 "`. The preposition is provenance-neutral: by itself it does not establish
+live-link, environment, authorization, credential, or freshness state. It is
+not a leading separator for the whole section: in standard
 Spaceship v4 composition, the preceding section's suffix (normally
 `SPACESHIP_PROMPT_DEFAULT_SUFFIX`, a space) provides the boundary before `at `.
 Do not add leading whitespace to the prefix or symbol to compensate for a

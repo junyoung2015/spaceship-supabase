@@ -155,6 +155,13 @@ line. It is safe to evaluate on every shell start. Do not use an unguarded
 `spaceship add` line: it adds another `supabase` entry each time the file is
 sourced.
 
+If you upgraded the plugin checkout from beta.3, replace the old guarded
+`spaceship add --before char supabase` block with the beta.4 block above. A tag
+checkout cannot edit `.zshrc`, and appending a second guard does not move an
+already registered section. Start a fresh process with `exec zsh`, then verify
+that `supabase` appears once and precedes `line_sep`, which in turn precedes
+`char`. See the [beta migration and rollback procedure](beta-testing.md#upgrade-the-prompt-registration-from-beta3).
+
 ## The segment is on a different line than I expect
 
 The Supabase section does not insert a newline. Spaceship's `line_sep` section
@@ -184,6 +191,16 @@ SPACESHIP_IP_SUFFIX="$SPACESHIP_PROMPT_DEFAULT_SUFFIX"
 ```
 
 Then reload the shell. The adjacent segments should read `… @ <ip> at 🔷 <ref>`.
+The [pinned load-order analysis](research/spaceship-ip-load-order.md) explains
+why the preceding section owns this boundary and what the integration suite
+tests.
+
+Rolling back the plugin tag does not roll back either registration placement or
+the IP suffix assignment in `.zshrc`. Treat tag rollback and host-configuration
+rollback as separate operations; restore the earlier guarded `--before char`
+registration only if you also want the pre-beta.4 prompt-line placement. The IP
+suffix repair can remain because it restores `spaceship-ip`'s ordinary
+Spaceship boundary independently of this plugin.
 
 To make every section and the prompt character use one physical line, set the
 global Spaceship option:
