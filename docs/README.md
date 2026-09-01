@@ -21,8 +21,10 @@ Documentation on `main` describes the current `v0.2.0-beta.4` prerelease. Stable
 | --- | --- |
 | Product direction | [Roadmap](roadmap.md) |
 | Accepted v0.2 vocabulary, output forms, and precedence | [v0.2 target context contract](design/v0.2-target-context-contract.md) |
-| Supabase CLI project name and branch evidence | [Supabase CLI research](research/supabase-cli-project-names.md) |
+| Earlier Supabase CLI project name and branch evidence | [Supabase CLI research](research/supabase-cli-project-names.md) |
+| Current stable CLI project, hosted branch, and prompt glyph evidence | [Project and hosted branch research](research/supabase-project-and-branch-context.md) |
 | Spaceship IP section load order evidence | [Spaceship IP research](research/spaceship-ip-load-order.md) |
+| README terminal image provenance and privacy checks | [Terminal screenshot record](research/readme-terminal-screenshot.md) |
 
 ## Contribute and verify
 

@@ -22,6 +22,10 @@ Supabase commands can change a hosted project, while the terminal usually gives 
 
 `spaceship-supabase` reads validated local link state and renders the complete 20 character project reference. Prompt rendering stays local, read only, and fresh.
 
+The image below previews the current beta layout with a synthetic project label, path, Git branch, and project ref. The command is visible before execution and was never run. Stable `v0.1.1` presentation is shown in the next section.
+
+![Kaku terminal showing synthetic Supabase project context before an unexecuted database command](docs/assets/spaceship-supabase-terminal.png)
+
 ## What it shows
 
 The stable `v0.1.1` release places the linked project beside the prompt character:
@@ -34,13 +38,13 @@ The stable `v0.1.1` release places the linked project beside the prompt characte
 The reference stays visible when you add a local label:
 
 ```text
-🔷 Production (abcdefghijklmnopqrst)
+🔷 Customer API / staging (abcdefghijklmnopqrst)
 ```
 
 | Display | Meaning |
 | --- | --- |
 | `🔷 abcdefghijklmnopqrst` | A valid live project ref was found locally |
-| `🔷 Production (abcdefghijklmnopqrst)` | A local label decorates that same live ref |
+| `🔷 Customer API / staging (abcdefghijklmnopqrst)` | A user-owned project and branch label decorates that same live ref |
 | `local-db:<name>` marker | Optional local database branch context |
 | `configured:<name>` marker | Explicit config fallback with lower authority than a live ref |
 | No segment | Check visibility, registration, renderer, format, and identity inputs |
@@ -140,7 +144,7 @@ Add a local label while retaining the ref:
 
 ```zsh
 SPACESHIP_SUPABASE_FORMAT="label+ref"
-spaceship_supabase_label set "Production"
+spaceship_supabase_label set "Customer API / staging"
 ```
 
 Optional controls cover the symbol, color, format, selected config remote, and local database branch marker. Stable users should follow the [v0.1.1 configuration reference](https://github.com/junyoung2015/spaceship-supabase/blob/v0.1.1/docs/configuration.md) and [v0.1.1 label guide](https://github.com/junyoung2015/spaceship-supabase/blob/v0.1.1/docs/labels.md). The [beta.4 configuration reference](docs/configuration.md) also documents the prerelease prefix, prompt placement, and synced project decoration.
@@ -201,7 +205,9 @@ The [documentation index](docs/README.md) routes product, design, research, cont
 * [Roadmap](docs/roadmap.md)
 * [v0.2 target context contract](docs/design/v0.2-target-context-contract.md)
 * [Supabase CLI research](docs/research/supabase-cli-project-names.md)
+* [Current project, hosted branch, and prompt glyph research](docs/research/supabase-project-and-branch-context.md)
 * [Spaceship IP research](docs/research/spaceship-ip-load-order.md)
+* [README terminal screenshot record](docs/research/readme-terminal-screenshot.md)
 * [v0.1.0 release plan](docs/releases/v0.1.0-release-plan.md)
 
 </details>

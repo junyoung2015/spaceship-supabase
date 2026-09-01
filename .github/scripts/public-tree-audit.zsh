@@ -28,6 +28,9 @@ while IFS= read -r -d $'\0' tracked_path; do
     docs/archive/*|docs/plan-before-bmm/*)
       private_paths+=("$tracked_path")
       ;;
+    docs/assets/spaceship-supabase-terminal.png)
+      allowed_paths+=("$tracked_path")
+      ;;
     docs/*.md)
       allowed_paths+=("$tracked_path")
       ;;

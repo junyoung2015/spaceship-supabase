@@ -59,7 +59,10 @@ that source fits the north star.
 - Completed first-release plan:
   [`docs/releases/v0.1.0-release-plan.md`](releases/v0.1.0-release-plan.md).
 - Current source research:
+  Earlier v0.2 evidence is in
   [`docs/research/supabase-cli-project-names.md`](research/supabase-cli-project-names.md).
+  Current stable CLI project, hosted branch, and prompt glyph evidence is in
+  [`docs/research/supabase-project-and-branch-context.md`](research/supabase-project-and-branch-context.md).
 - Accepted v0.2 product contract:
   [`docs/design/v0.2-target-context-contract.md`](design/v0.2-target-context-contract.md).
 - Beta decision evidence template, currently unpopulated and not approval for
@@ -83,6 +86,56 @@ owner only authorization and `extend` decision in #15 permit continued owner
 testing but cannot satisfy that release gate. Before a stable `go`, #15 must
 separately authorize a second tester for the exact tag and record the required
 evidence.
+
+### Progress at a glance
+
+1. Stable `v0.1.1` delivers the fail-closed full-ref prompt section, manual
+   labels, explicit configured fallback, optional local database terminology,
+   diagnostics, release automation, and the supported test matrix.
+2. The bounded v0.2 product work in #3 through #8 is implemented. It includes
+   the user-invoked top-level project-name sync, separate provenance-aware
+   decoration state, privacy opt-in, migration guidance, and security and
+   compatibility coverage.
+3. #32 published the immutable `v0.2.0-beta.4` candidate after its complete
+   tag-triggered release gate passed.
+4. #15 records owner-only authorization, a passing initial beta.4 matrix, and
+   an `extend` decision for longer owner dogfood.
+5. The `v0.2.0` milestone remains open because owner-only evidence cannot
+   satisfy #9's two-person stable-release gate.
+
+### Immediate order
+
+1. Continue normal owner use of the exact `v0.2.0-beta.4` tag and add only
+   redacted recurring-use evidence to #15. A passing initial matrix does not
+   replace longer dogfood.
+2. Select a second tester only when the release owner is ready to support that
+   person. #15 must record exact-tag authorization, access, confidentiality,
+   retention, a tested private vulnerability route, and decision authority
+   before the tester installs the beta.
+3. Complete the two-person core and safely divided feature matrix in #15. Any
+   identity, privacy, rollback, duplicate-registration, or prompt-safety concern
+   produces `extend` or `pause` until resolved.
+4. Record one release-owner `go`, `extend`, or `pause` decision. Only a `go`
+   backed by sufficient two-person evidence may start the stable work in #9.
+5. For `go`, prepare the stable version and changelog change, run the complete
+   review and release gate, publish the annotated `v0.2.0` tag, and verify the
+   resulting GitHub Release. Do not start v0.3 delivery first.
+
+Two useful tracks can proceed while dogfood evidence accumulates:
+
+1. [#35](https://github.com/junyoung2015/spaceship-supabase/issues/35)
+   adds a privacy-safe synthetic terminal screenshot. It changes documentation,
+   not release behavior or evidence.
+2. [#36](https://github.com/junyoung2015/spaceship-supabase/issues/36)
+   studies a more Supabase-aligned terminal symbol and color. It can recommend
+   a future visual change but cannot change the v0.2 identity contract. The
+   [current research](research/supabase-project-and-branch-context.md#brand-and-terminal-glyph-research)
+   narrows the portable comparison to `S `, `SB `, and `↯ ` while keeping the
+   existing `🔷 ` as the control.
+3. [#13](https://github.com/junyoung2015/spaceship-supabase/issues/13)
+   may collect demand and source-contract evidence for hosted-branch context.
+   Implementation remains inactive until its two-user demand, supported source,
+   and fresh product-contract gates are all met.
 
 ## How planning evolved
 

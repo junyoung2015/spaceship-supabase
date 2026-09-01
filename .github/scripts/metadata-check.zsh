@@ -26,6 +26,9 @@ for doc in \
   docs/configuration.md docs/data-sources.md docs/labels.md docs/troubleshooting.md \
   docs/compatibility.md docs/testing.md docs/roadmap.md \
   docs/design/v0.2-target-context-contract.md \
+  docs/assets/spaceship-supabase-terminal.png \
+  docs/research/readme-terminal-screenshot.md \
+  docs/research/supabase-project-and-branch-context.md \
   docs/research/spaceship-ip-load-order.md \
   docs/research/supabase-cli-project-names.md docs/releases/v0.1.0-release-plan.md; do
   require_file "$doc"
@@ -79,6 +82,9 @@ for doc in \
   docs/configuration.md docs/data-sources.md docs/labels.md docs/troubleshooting.md \
   docs/compatibility.md docs/testing.md docs/roadmap.md \
   docs/design/v0.2-target-context-contract.md \
+  docs/assets/spaceship-supabase-terminal.png \
+  docs/research/readme-terminal-screenshot.md \
+  docs/research/supabase-project-and-branch-context.md \
   docs/research/spaceship-ip-load-order.md \
   docs/research/supabase-cli-project-names.md docs/releases/v0.1.0-release-plan.md; do
   if ! grep -Fq "$doc" README.md; then
