@@ -9,6 +9,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 ### Added
 
 * Added a compact documentation index organized by reader goal.
+* Added a privacy-reviewed Kaku terminal screenshot rendered from synthetic project state, plus a repeatable capture and validation record.
+* Added public tracking for the README screenshot and Supabase-aligned terminal symbol research.
+* Added a primary-source update for Supabase CLI `v2.116.0` project and hosted branch context, plus portable and patched-font prompt glyph options.
 
 ### Changed
 
@@ -17,6 +20,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 * Pinned stable installation help to the `v0.1.1` documentation so current prerelease guidance cannot change the stable path.
 * Aligned public beta guidance with owner only beta.4 authorization, public repository visibility, and the current `extend` decision in issue 15.
 * Kept stable promotion blocked on issue 9's required two person dogfood evidence and documented the beta specific private reporting route.
+* Added a progress summary and immediate execution order to the roadmap, separating the stable release gate from parallel documentation and discovery work.
+* Updated README label examples to show user-owned project and branch context while preserving the full validated ref.
 
 ## [0.2.0-beta.4]
 

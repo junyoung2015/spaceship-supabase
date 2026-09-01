@@ -34,10 +34,26 @@ prepare_release_candidate() {
   local script=''
   for script in \
     release-contract.zsh release-classify.zsh release-duplicate-check.zsh release-create.zsh \
-    release-preflight.zsh metadata-check.zsh; do
+    release-preflight.zsh metadata-check.zsh public-tree-audit.zsh; do
     command cp "$TEST_REPO_ROOT/.github/scripts/$script" \
       "$candidate/.github/scripts/$script" || return 1
   done
+
+  command mkdir -p "$candidate/docs/assets" "$candidate/docs/research" || return 1
+  local fixture_path=''
+  for fixture_path in \
+    README.md CHANGELOG.md docs/README.md docs/roadmap.md \
+    docs/assets/spaceship-supabase-terminal.png \
+    docs/research/readme-terminal-screenshot.md \
+    docs/research/supabase-project-and-branch-context.md; do
+    command cp "$TEST_REPO_ROOT/$fixture_path" "$candidate/$fixture_path" || return 1
+  done
+
+  command git -C "$candidate" add \
+    .github/scripts/public-tree-audit.zsh README.md CHANGELOG.md docs/README.md \
+    docs/roadmap.md docs/assets/spaceship-supabase-terminal.png \
+    docs/research/readme-terminal-screenshot.md \
+    docs/research/supabase-project-and-branch-context.md || return 1
 
   REPLY="$candidate"
   return 0
@@ -452,6 +468,29 @@ test_metadata_requires_pinned_compatibility_research() {
   return 0
 }
 
+test_public_tree_allows_only_the_reviewed_screenshot() {
+  local tmp='' candidate='' output=''
+  new_test_dir || return 1
+  tmp="$REPLY"
+  prepare_release_candidate "$tmp" || return 1
+  candidate="$REPLY"
+  prepare_exact_prerelease_candidate "$candidate" '0.2.0-beta.4' || return 1
+
+  assert_success 'the reviewed screenshot path passes the public tree audit' \
+    "$RELEASE_TEST_ZSH" -f "$candidate/.github/scripts/public-tree-audit.zsh"
+  command cp "$candidate/docs/assets/spaceship-supabase-terminal.png" \
+    "$candidate/docs/assets/unreviewed.png" || return 1
+  command git -C "$candidate" add docs/assets/unreviewed.png || return 1
+  if output="$("$RELEASE_TEST_ZSH" -f "$candidate/.github/scripts/public-tree-audit.zsh" 2>&1)"; then
+    test_failure 'the public tree audit rejects an unreviewed image path'
+  fi
+  assert_contains "$output" 'docs/assets/unreviewed.png' \
+    'the public tree audit reports the exact unreviewed image path'
+
+  cleanup_release_test_dir "$tmp"
+  return 0
+}
+
 test_case 'stable and constrained beta release identifiers are exact' test_stable_and_beta_contract_forms_are_exact
 test_case 'synthetic candidates isolate existing release tags' test_synthetic_candidates_isolate_existing_release_tags
 test_case 'valid stable preflight retains stable creation behavior' test_valid_stable_preflight_and_dry_run
@@ -460,4 +499,5 @@ test_case 'preflight extracts only the literal matching beta changelog section' 
 test_case 'preflight rejects mismatched, lightweight, non-main, and missing-note tags' test_release_preflight_rejects_tag_and_history_failures
 test_case 'duplicate refusal and beta release command behavior are retained' test_duplicate_refusal_and_beta_dry_run
 test_case 'metadata requires pinned compatibility research in the release tree' test_metadata_requires_pinned_compatibility_research
+test_case 'public tree allows only the reviewed screenshot asset' test_public_tree_allows_only_the_reviewed_screenshot
 finish_tests
