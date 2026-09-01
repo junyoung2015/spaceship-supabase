@@ -31,6 +31,7 @@ suites=(
   tests/integration/test_labels_and_doctor.zsh
   tests/integration/test_synced_decorations.zsh
   tests/integration/test_spaceship_registration.zsh
+  tests/release/test_glyph_fixture.zsh
   tests/release/test_release_scripts.zsh
   tests/negative/test_fail_closed.zsh
   tests/security/test_untrusted_state.zsh

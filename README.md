@@ -202,13 +202,15 @@ The [documentation index](docs/README.md) routes product, design, research, cont
 <details>
 <summary><strong>Maintainer product contract and evidence</strong></summary>
 
-* [Roadmap](docs/roadmap.md)
-* [v0.2 target context contract](docs/design/v0.2-target-context-contract.md)
-* [Supabase CLI research](docs/research/supabase-cli-project-names.md)
-* [Current project, hosted branch, and prompt glyph research](docs/research/supabase-project-and-branch-context.md)
-* [Spaceship IP research](docs/research/spaceship-ip-load-order.md)
-* [README terminal screenshot record](docs/research/readme-terminal-screenshot.md)
-* [v0.1.0 release plan](docs/releases/v0.1.0-release-plan.md)
+1. [Roadmap](docs/roadmap.md)
+2. [v0.2 target context contract](docs/design/v0.2-target-context-contract.md)
+3. [Supabase CLI research](docs/research/supabase-cli-project-names.md)
+4. [Current project, hosted branch, and prompt glyph research](docs/research/supabase-project-and-branch-context.md)
+5. [Supported-terminal glyph matrix](docs/research/supabase-terminal-glyph-matrix.md)
+6. [Spaceship IP research](docs/research/spaceship-ip-load-order.md)
+7. [README terminal screenshot record](docs/research/readme-terminal-screenshot.md)
+8. [beta.4 second-tester preparation templates](docs/beta/v0.2-beta.4-second-tester-templates.md)
+9. [v0.1.0 release plan](docs/releases/v0.1.0-release-plan.md)
 
 </details>
 

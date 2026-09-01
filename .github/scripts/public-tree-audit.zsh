@@ -43,6 +43,15 @@ while IFS= read -r -d $'\0' tracked_path; do
       allowed_paths+=("$tracked_path")
       ;;
 
+    # The controlled glyph renderer is a release-evidence fixture. New manual
+    # rendering fixtures need an explicit public-tree review before export.
+    tests/manual/render-glyph-matrix.zsh)
+      allowed_paths+=("$tracked_path")
+      ;;
+    tests/manual/*)
+      unknown_paths+=("$tracked_path")
+      ;;
+
     # The maintained test suite and its audited vendored dependencies are
     # intentionally published so contributors can reproduce release gates.
     tests/*)

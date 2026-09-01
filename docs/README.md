@@ -23,6 +23,7 @@ Documentation on `main` describes the current `v0.2.0-beta.4` prerelease. Stable
 | Accepted v0.2 vocabulary, output forms, and precedence | [v0.2 target context contract](design/v0.2-target-context-contract.md) |
 | Earlier Supabase CLI project name and branch evidence | [Supabase CLI research](research/supabase-cli-project-names.md) |
 | Current stable CLI project, hosted branch, and prompt glyph evidence | [Project and hosted branch research](research/supabase-project-and-branch-context.md) |
+| Supported-terminal prompt glyph decision and exact blocked visual cells | [Terminal glyph matrix](research/supabase-terminal-glyph-matrix.md) |
 | Spaceship IP section load order evidence | [Spaceship IP research](research/spaceship-ip-load-order.md) |
 | README terminal image provenance and privacy checks | [Terminal screenshot record](research/readme-terminal-screenshot.md) |
 
@@ -41,6 +42,7 @@ Documentation on `main` describes the current `v0.2.0-beta.4` prerelease. Stable
 | --- | --- |
 | Review stable and prerelease changes | [Changelog](../CHANGELOG.md) |
 | Join an authorized beta, verify it, or roll back | [Beta testing](beta-testing.md) |
+| Prepare a later independent beta.4 tester authorization and redacted reply | [beta.4 second-tester templates](beta/v0.2-beta.4-second-tester-templates.md) |
 
 For current work status, use [GitHub issues](https://github.com/junyoung2015/spaceship-supabase/issues) and milestones.
 
