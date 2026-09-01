@@ -15,9 +15,10 @@ The section does not invoke the CLI at prompt time. Fixture versions therefore v
 gate failed, so it must not be installed or republished. Its successor,
 `v0.2.0-beta.2`, is an immutable published prerelease but is superseded for
 current-style explicit sync. `v0.2.0-beta.3` is immutable and carried that
-bounded parser repair. Its `v0.2.0-beta.4` maintainer-only private-dogfood
-successor is not a stable or external-beta approval. It retains the supported
-environment above and adds the
+bounded parser repair. Its immutable published
+[`v0.2.0-beta.4` successor prerelease](https://github.com/junyoung2015/spaceship-supabase/releases/tag/v0.2.0-beta.4)
+is not a stable release, dogfood authorization, or external-beta approval. It
+retains the supported environment above and adds the
 `spaceship_supabase_sync project` helper as the one explicit exception to the
 no-CLI prompt rule: it requires an installed CLI only when a user invokes it.
 Its compatibility path is deliberately narrow:
@@ -90,7 +91,7 @@ The optional `supabase/.branches/_current_branch` input is a local database-bran
 
 An unsupported, malformed, unreadable, oversized, symlinked, or ambiguous **identity-critical** root/config/live-ref layout is not a compatibility fallback. It renders no segment. This is a security property: a terminal prompt must not turn arbitrary filesystem bytes into trusted context. The local-db branch is optional decoration: an unsafe branch file is omitted while an independently valid live ref remains visible.
 
-The `v0.2.0-beta.4` private-dogfood candidate intentionally does not support:
+The `v0.2.0-beta.4` prerelease intentionally does not support:
 
 - `.supabase/project.json`, which belongs to the alpha next/V3 shell rather than
   the stable CLI contract;

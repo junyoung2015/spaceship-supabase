@@ -20,23 +20,24 @@ standalone example above begins directly with the symbol. `at ` is a
 section-level target/context preposition; it does not prove live-link,
 environment, authorization, credential, or freshness state.
 
-The `v0.2.0-beta.4` candidate carries one explicitly confirmed, point-in-time
-project-name decoration after a user runs a command. It remains off by default,
-keeps the full ref visible, says `synced:project`, and never does a remote
-lookup while a prompt is drawn. beta.4 also makes the documented installation
-default place the section with the status context when Spaceship has a
-`line_sep`; a user can still opt into prompt-line placement. It may be used for
-maintainer-only private dogfood only after its reviewed annotated tag has passed
-the release gate, published a GitHub prerelease, and received an explicit
-beta.4 authorization in [#15](https://github.com/junyoung2015/spaceship-supabase/issues/15);
-it is not a stable release and does not authorize external or phase-2-alpha
-invitations. The earlier `v0.2.0-beta.1` tag is immutable but rejected and
+The published [`v0.2.0-beta.4` prerelease](https://github.com/junyoung2015/spaceship-supabase/releases/tag/v0.2.0-beta.4)
+carries one explicitly confirmed, point-in-time project-name decoration after
+a user runs a command. It remains off by default, keeps the full ref visible,
+says `synced:project`, and never does a remote lookup while a prompt is drawn.
+beta.4 also makes the documented installation default place the section with
+the status context when Spaceship has a `line_sep`; a user can still opt into
+prompt-line placement. Publication is complete, but maintainer-private dogfood
+is not yet authorized: [#15](https://github.com/junyoung2015/spaceship-supabase/issues/15)
+must first record the exact beta.4 cohort, confidentiality rules, private
+security route, and decision authority. It is not a stable release and does
+not authorize external or phase-2-alpha invitations. The earlier
+`v0.2.0-beta.1` tag is immutable but rejected and
 unpublished, so it must not be installed or reused. The published
 `v0.2.0-beta.2` prerelease found that
 current v2.111.0+ projects-list JSON envelope incompatibility safely and wrote
 no decoration; it remains immutable and is superseded for that sync path.
 `v0.2.0-beta.3` carried the focused [#27](https://github.com/junyoung2015/spaceship-supabase/issues/27)
-repair and remains immutable. beta.4 is its successor candidate.
+repair and remains immutable. beta.4 is its published successor prerelease.
 
 Stable v0.2 is deliberately bounded to exact-ref identity, manual labels, and
 the opt-in top-level `synced:project` path. Automatic hosted-branch discovery
@@ -46,9 +47,10 @@ hosted branch ref is the supported recognizable form in v0.2.
 The project started from a practical safety need: Supabase commands can mutate
 a hosted target while the terminal provides no persistent, recognizable target
 context. The stable `v0.1.1` release establishes a truthful full-ref safety
-baseline, with a ref-only default display. The `v0.2.0-beta.4` private-dogfood
-candidate carries the beta.1-defined behavior without adding prompt-time network
-access or hiding the authoritative ref. It retains beta.3's merged current-CLI
+baseline, with a ref-only default display. The published `v0.2.0-beta.4`
+prerelease is the candidate for a separately authorized private-dogfood gate.
+It carries the beta.1-defined behavior without adding prompt-time network access
+or hiding the authoritative ref. It retains beta.3's merged current-CLI
 compatibility repair and adds documented, host-owned prompt placement plus the
 contextual, provenance-neutral `at ` target/context prefix. The accepted vocabulary,
 exact v0.2 prompt forms, privacy defaults, and
@@ -220,10 +222,10 @@ registration and starting a fresh shell.
 `v0.2.0-beta.1` is immutable but rejected and unpublished; do not install,
 retag, or republish it. `v0.2.0-beta.2` is published but superseded for
 current-style sync; do not retag it. The
-`v0.2.0-beta.3` tag is immutable and superseded by the `v0.2.0-beta.4` successor
-candidate, which may be used for maintainer-only private dogfood only after its
-reviewed annotated tag has published a GitHub prerelease and #15 explicitly
-authorizes the beta.4 gate.
+`v0.2.0-beta.3` tag is immutable and superseded by the published
+`v0.2.0-beta.4` successor prerelease. Publication alone does not authorize
+maintainer-private dogfood; #15 must explicitly authorize the exact beta.4 gate
+before installation or testing.
 It does not authorize an external beta, phase-2-alpha invitations, or the
 Dongtan-report decision. Use a reviewed beta tag—not a branch—and follow the
 exact [beta install, rollback, verification, and feedback steps](docs/beta-testing.md).
@@ -317,14 +319,15 @@ A live `project-ref` always wins. The top-level `project_id` in `config.toml` is
 
 ### Explicit synced project name — v0.2 private dogfood
 
-The normal prompt never calls Supabase or exposes a remote project name. Only
-after the reviewed `v0.2.0-beta.4` annotated tag has published a GitHub
-prerelease **and** the release owner has explicitly authorized the beta.4
-cohort in [#15](https://github.com/junyoung2015/spaceship-supabase/issues/15)
-may an authorized maintainer deliberately discover the name for the **current
-live ref** and save it as a separate, point-in-time decoration:
+The normal prompt never calls Supabase or exposes a remote project name. The
+reviewed `v0.2.0-beta.4` annotated tag and GitHub prerelease now exist, but the
+release owner has not yet authorized its private-dogfood cohort in
+[#15](https://github.com/junyoung2015/spaceship-supabase/issues/15). Only after
+that separate decision may an authorized maintainer deliberately discover the
+name for the **current live ref** and save it as a separate, point-in-time
+decoration:
 
-> **beta.4 candidate scope:** beta.4 retains beta.3's stable current-style
+> **beta.4 release scope:** beta.4 retains beta.3's stable current-style
 > v2.111.0+ `{ "projects": [...], "message": "" }` envelope support only in
 > the explicit user-invoked helper. It remains fail-closed for missing,
 > unknown, duplicate, malformed, escaped, or nonempty companion fields. The
