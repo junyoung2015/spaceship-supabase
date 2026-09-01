@@ -1,11 +1,14 @@
 # Support
 
-For installation, configuration, or expected no-segment behavior, start with:
+Choose help for the release you installed. The files on `main` describe the
+current beta.4 prerelease.
 
-- [README.md](README.md)
-- [Troubleshooting](docs/troubleshooting.md)
-- [Configuration](docs/configuration.md)
-- [Compatibility](docs/compatibility.md)
+| Need | Stable `v0.1.1` | Current beta.4 |
+| --- | --- | --- |
+| Start here | [Stable README](https://github.com/junyoung2015/spaceship-supabase/blob/v0.1.1/README.md) | [Current README](README.md) |
+| Diagnose a hidden or unexpected segment | [Stable troubleshooting](https://github.com/junyoung2015/spaceship-supabase/blob/v0.1.1/docs/troubleshooting.md) | [Beta troubleshooting](docs/troubleshooting.md) |
+| Configure the section | [Stable configuration](https://github.com/junyoung2015/spaceship-supabase/blob/v0.1.1/docs/configuration.md) | [Beta configuration](docs/configuration.md) |
+| Check compatibility | [Stable compatibility](https://github.com/junyoung2015/spaceship-supabase/blob/v0.1.1/docs/compatibility.md) | [Beta compatibility](docs/compatibility.md) |
 
 Run the local, read-only command below before asking for help:
 

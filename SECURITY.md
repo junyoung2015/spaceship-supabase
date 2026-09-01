@@ -6,13 +6,19 @@ Please **do not put vulnerability details, reproduction steps, impact, affected
 revisions, secrets, project state, or exploit information in a public GitHub
 issue**.
 
-When GitHub exposes the repository's private vulnerability-reporting route to
-your account, submit a GitHub Security Advisory:
+An exact beta authorization may name a specific private route for its cohort.
+For the current beta.4 owner only gate, [issue 15](https://github.com/junyoung2015/spaceship-supabase/issues/15)
+requires `@junyoung2015` to use the direct email route recorded there. That
+exception applies only to that person and exact tag.
+
+For every other report, when GitHub exposes the repository's private
+vulnerability reporting route to your account, submit a GitHub Security
+Advisory:
 
 <https://github.com/junyoung2015/spaceship-supabase/security/advisories/new>
 
-Confirm that the page is accessible before beginning beta testing; private
-repository access alone does not prove that GitHub grants advisory-creation
+Confirm that the page is accessible before beginning beta testing; repository
+access alone does not prove that GitHub grants advisory creation
 permission to every collaborator. Include a minimal reproduction, the affected
 revision, expected and observed behavior, and impact. Do not include Supabase
 access tokens, service-role keys, passwords, full local paths, production
@@ -31,7 +37,12 @@ should proceed until its intended reporters have a tested private route.
 
 ## Supported versions
 
-Security fixes are provided for the latest published stable version on `main`. A pending version becomes supported only after its annotated tag and GitHub Release are published. Alpha-era private history and untagged builds are not supported release artifacts.
+Security fixes are currently provided for the stable `v0.1.1` release. A future
+stable version becomes supported only after its annotated stable tag and GitHub
+Release are published. Prerelease support is limited to the exact tag and cohort
+named in [issue 15](https://github.com/junyoung2015/spaceship-supabase/issues/15).
+The current beta.4 cohort contains `@junyoung2015` only. Untagged builds and
+alpha era private history are not supported release artifacts.
 
 ## Security scope
 

@@ -36,7 +36,7 @@ that source fits the north star.
 - Historical private-dogfood prerelease: `v0.2.0-beta.3` is immutable and
   carries [#27](https://github.com/junyoung2015/spaceship-supabase/issues/27)'s
   narrow parser repair.
-- Published maintainer-private successor prerelease:
+- Published owner only successor prerelease:
   [`v0.2.0-beta.4`](https://github.com/junyoung2015/spaceship-supabase/releases/tag/v0.2.0-beta.4)
   retains beta.3's bounded sync scope and makes the host-owned default
   registration change that places the section before a present `line_sep`,
@@ -45,11 +45,12 @@ that source fits the north star.
   `at ` the default section-level target/context prefix, with an explicitly
   empty prefix as the compact opt-out. The prefix does not establish live-link,
   environment, authorization, or freshness provenance. The complete
-  tag-triggered gate passed under [#32](https://github.com/junyoung2015/spaceship-supabase/issues/32),
-  but publication is neither beta.4 dogfood authorization nor approval for
-  external or phase-2-alpha invitations. The current two-person authorization
-  in #15 is beta.3-only; beta.4 still needs its own exact-tag decision after an
-  agreed direct private security route is recorded.
+  tag-triggered gate passed under [#32](https://github.com/junyoung2015/spaceship-supabase/issues/32).
+  Publication alone did not authorize dogfood. The later exact decision in
+  [#15](https://github.com/junyoung2015/spaceship-supabase/issues/15) authorizes
+  `@junyoung2015` only and explicitly excludes every other person. The initial
+  matrix passed and the release owner recorded `extend` for continued owner only
+  dogfood. No external or phase 2 alpha invitation is authorized.
 - Active product milestone: [`v0.2.0`](https://github.com/junyoung2015/spaceship-supabase/milestone/1)
   — human-readable target context.
 - Active work tracker: the GitHub Issues mapped below and assigned to that
@@ -62,25 +63,26 @@ that source fits the north star.
 - Accepted v0.2 product contract:
   [`docs/design/v0.2-target-context-contract.md`](design/v0.2-target-context-contract.md).
 - Beta decision evidence template, currently unpopulated and not approval for
-  an external beta merely because a private-dogfood prerelease exists:
+  a larger cohort merely because owner only dogfood is active:
   [`docs/beta/v0.2-beta-acceptance-report-template.md`](beta/v0.2-beta-acceptance-report-template.md).
 
 The milestone has no calendar deadline. It closes when its outcome and safety
 gates are met.
 
-### Tracker-alignment gate completed for this CTO decision
+### Tracker authority and remaining release gate
 
-The 2026-09-01 post-merge gate is complete. GitHub remains the authoritative
-execution state: [#9](https://github.com/junyoung2015/spaceship-supabase/issues/9)
-now uses the bounded stable-v0.2 acceptance contract,
+GitHub remains the authoritative execution state.
 [#13](https://github.com/junyoung2015/spaceship-supabase/issues/13) is
-unmilestoned post-v0.2 discovery with explicit activation criteria, and the
-v0.2 milestone description no longer treats hosted-branch enrichment as a
-blocker. [#32](https://github.com/junyoung2015/spaceship-supabase/issues/32)
-owned the exact beta.4 scope, tag/publication gates, rollback accountability,
-and implementation-PR linkage, then closed after the immutable prerelease was
-verified. Stable promotion remains blocked on the separate beta.4
-authorization and redacted evidence decision in #15.
+unmilestoned post v0.2 discovery, and [#32](https://github.com/junyoung2015/spaceship-supabase/issues/32)
+completed the beta.4 tag and publication gate. The repository is now public,
+but visibility does not authorize beta testing.
+
+[#9](https://github.com/junyoung2015/spaceship-supabase/issues/9) still requires
+sufficient redacted two person dogfood evidence before stable promotion. The
+owner only authorization and `extend` decision in #15 permit continued owner
+testing but cannot satisfy that release gate. Before a stable `go`, #15 must
+separately authorize a second tester for the exact tag and record the required
+evidence.
 
 ## How planning evolved
 
@@ -222,14 +224,16 @@ name.
    [#14](https://github.com/junyoung2015/spaceship-supabase/issues/14) provides
    the guarded annotated `v0.2.0-beta.N` prerelease path. beta.1 is rejected
    and unpublished; beta.2 is published but superseded for current-style sync;
-   beta.3 is immutable; beta.4 is the sole published successor prerelease but
-   still has no dogfood authorization. The release owner must record an exact
-   beta.4 cohort, access, confidentiality, private security route, and decision
-   authority in #15 before installation or testing begins.
+   beta.3 is immutable; beta.4 is the sole published successor prerelease.
    [#15](https://github.com/junyoung2015/spaceship-supabase/issues/15)
-   provides the redacted go/extend/pause evidence structure; its working term
-   “Dongtan report” remains undefined until the board supplies the audience,
-   access, confidentiality, security-route, and approval decisions.
+   authorizes the repository owner only for the exact tag, records the private
+   reporting route and decision authority, and explicitly excludes every other
+   tester. The initial matrix passed with an `extend` decision. Owner only
+   evidence may continue, but issue #9 requires a separately authorized second
+   tester and sufficient redacted two person evidence before a stable `go`.
+   The issue provides the redacted go, extend, or pause evidence structure. Its
+   working term “Dongtan report” remains an undefined historical label and is
+   not used as a release artifact.
 5. **Treat hosted-branch display as post-v0.2 discovery, not a stable-release
    dependency.** [#13](https://github.com/junyoung2015/spaceship-supabase/issues/13)
    remains a sound separately gated design. It requires a user-supplied parent
@@ -261,13 +265,13 @@ order without duplicating open/closed state in this document.
 | [#8 — provenance and migration docs](https://github.com/junyoung2015/spaceship-supabase/issues/8) | Publish the implemented v0.2 behavior, privacy, and troubleshooting guidance. | #4, #6, #7 |
 | [#13 — hosted-branch sync](https://github.com/junyoung2015/spaceship-supabase/issues/13) | Post-v0.2 discovery for explicit hosted-branch decoration after demonstrated demand and an exact parent-scoped proof. | #6, #7 |
 | [#14 — guarded prerelease publishing](https://github.com/junyoung2015/spaceship-supabase/issues/14) | Publish `v0.2.0-beta.N` through the full release gate without changing stable releases. | #6, #7, #8 |
-| [#15 — redacted beta acceptance report](https://github.com/junyoung2015/spaceship-supabase/issues/15) | Prepare and later populate board-gated go/extend/pause evidence. | #6, #7, #8, #14 |
+| [#15: redacted beta acceptance report](https://github.com/junyoung2015/spaceship-supabase/issues/15) | Record owner only beta.4 authorization, redacted evidence, and go, extend, or pause decisions. | #6, #7, #8, #14 |
 | [#19 — v0.2.0-beta.1 private dogfood prerelease](https://github.com/junyoung2015/spaceship-supabase/issues/19) | Historical rejected/unpublished beta.1 candidate; preserve its failed-gate evidence and do not retag or publish it. | #6–#8, #14 |
 | [#25 — v0.2.0-beta.2 private dogfood prerelease](https://github.com/junyoung2015/spaceship-supabase/issues/25) | Cut the successor candidate with only merged release/test reliability fixes; no new customer feature or external-beta approval. | #6–#8, #14, #19 |
 | [#27 — current CLI JSON envelope compatibility](https://github.com/junyoung2015/spaceship-supabase/issues/27) | Accept the stable `{ projects, message: "" }` explicit-sync envelope without weakening bounded validation. | #6, #7, #25 |
 | [#29 — v0.2.0-beta.3 private dogfood prerelease](https://github.com/junyoung2015/spaceship-supabase/issues/29) | Historical beta.3 prerelease carrying only #27's bounded current-CLI compatibility repair; the immutable published beta.4 prerelease supersedes it. | #6–#8, #14, #25, #27 |
 | [#32 — v0.2.0-beta.4 private dogfood prerelease](https://github.com/junyoung2015/spaceship-supabase/issues/32) | Completed release-owner gate for the immutable beta.4 tag, full publication workflow, rollback accountability, and PR #31 linkage; it does not authorize dogfood. | #6–#8, #14, #29, #31 |
-| [#9 — v0.2.0 release](https://github.com/junyoung2015/spaceship-supabase/issues/9) | Authorize and dogfood exact-tag beta.4, record the release decision, then pass the stable release gate, tag, and publish v0.2.0. | #3, #4, #6–#8, #14, #15, #32 |
+| [#9: v0.2.0 release](https://github.com/junyoung2015/spaceship-supabase/issues/9) | Complete sufficient redacted two person exact tag dogfood, record a stable readiness decision, then pass the stable release gate, tag, and publish v0.2.0. | #3, #4, #6, #7, #8, #14, #15, #32 |
 
 ### Release acceptance
 
