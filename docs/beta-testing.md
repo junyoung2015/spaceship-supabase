@@ -30,6 +30,21 @@ receive a `go` decision. The current owner only authorization cannot satisfy
 that gate. A second tester must receive a separate exact authorization in #15
 before contributing evidence toward stable promotion.
 
+## Later second-tester preparation
+
+The reusable [beta.4 second-tester templates](beta/v0.2-beta.4-second-tester-templates.md)
+authorize nobody. They are preparation material for a future exact decision in
+#15 after the user identifies one genuinely independent second tester and the
+release owner completes every authorization condition.
+
+1. The template fixes the exact beta.4 tag, annotated object, implementation
+   commit, rollback target, bounded cohort, security-route confirmation,
+   confidentiality, retention, and decision authority.
+2. The evidence reply keeps both people on the same Core matrix and safely
+   splits context-dependent rows without publishing operational details.
+3. The second tester must confirm the approved private vulnerability route
+   while signed in before any beta.4 authorization becomes effective.
+
 > **beta.4 release scope:** beta.4 retains beta.3's strict support for the
 > v2.111.0+ `{ "projects": [...], "message": "" }` envelope. It adds the
 > documented default that registers the prompt section before Spaceship's

@@ -23,6 +23,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 * Added a progress summary and immediate execution order to the roadmap, separating the stable release gate from parallel documentation and discovery work.
 * Updated README label examples to show user-owned project and branch context while preserving the full validated ref.
 
+### Release readiness
+
+1. Added a controlled Spaceship v4 glyph fixture and a primary-source terminal
+   matrix record that preserves the current default and names every blocked
+   supported-terminal visual cell.
+2. Added inert beta.4 second-tester authorization and redacted evidence-reply
+   templates. The current owner-only cohort and stable-release block remain
+   unchanged.
+
 ## [0.2.0-beta.4]
 
 ### Changed

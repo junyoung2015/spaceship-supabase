@@ -39,13 +39,17 @@ prepare_release_candidate() {
       "$candidate/.github/scripts/$script" || return 1
   done
 
-  command mkdir -p "$candidate/docs/assets" "$candidate/docs/research" || return 1
+  command mkdir -p "$candidate/docs/assets" "$candidate/docs/research" \
+    "$candidate/docs/beta" "$candidate/tests/manual" || return 1
   local fixture_path=''
   for fixture_path in \
     README.md CHANGELOG.md docs/README.md docs/roadmap.md \
     docs/assets/spaceship-supabase-terminal.png \
     docs/research/readme-terminal-screenshot.md \
-    docs/research/supabase-project-and-branch-context.md; do
+    docs/research/supabase-terminal-glyph-matrix.md \
+    docs/research/supabase-project-and-branch-context.md \
+    docs/beta/v0.2-beta.4-second-tester-templates.md \
+    tests/manual/render-glyph-matrix.zsh; do
     command cp "$TEST_REPO_ROOT/$fixture_path" "$candidate/$fixture_path" || return 1
   done
 
@@ -53,7 +57,10 @@ prepare_release_candidate() {
     .github/scripts/public-tree-audit.zsh README.md CHANGELOG.md docs/README.md \
     docs/roadmap.md docs/assets/spaceship-supabase-terminal.png \
     docs/research/readme-terminal-screenshot.md \
-    docs/research/supabase-project-and-branch-context.md || return 1
+    docs/research/supabase-terminal-glyph-matrix.md \
+    docs/research/supabase-project-and-branch-context.md \
+    docs/beta/v0.2-beta.4-second-tester-templates.md \
+    tests/manual/render-glyph-matrix.zsh || return 1
 
   REPLY="$candidate"
   return 0
@@ -443,7 +450,7 @@ test_duplicate_refusal_and_beta_dry_run() {
   return 0
 }
 
-test_metadata_requires_pinned_compatibility_research() {
+test_metadata_requires_release_evidence_artifacts() {
   local tmp='' candidate='' output=''
   new_test_dir || return 1
   tmp="$REPLY"
@@ -451,24 +458,44 @@ test_metadata_requires_pinned_compatibility_research() {
   candidate="$REPLY"
   prepare_exact_prerelease_candidate "$candidate" '0.2.0-beta.4' || return 1
 
-  assert_success 'beta.4 metadata includes its pinned compatibility research' \
+  assert_success 'beta.4 metadata includes its release-evidence artifacts' \
     "$RELEASE_TEST_ZSH" -f "$candidate/.github/scripts/metadata-check.zsh"
   command git -C "$candidate" rm --cached --quiet -- \
-    docs/research/spaceship-ip-load-order.md || return 1
-  assert_file_exists "$candidate/docs/research/spaceship-ip-load-order.md" \
-    'trackedness fixture leaves the nonempty research file in the worktree'
+    docs/research/supabase-terminal-glyph-matrix.md || return 1
+  assert_file_exists "$candidate/docs/research/supabase-terminal-glyph-matrix.md" \
+    'trackedness fixture leaves the glyph matrix in the worktree'
   if output="$("$RELEASE_TEST_ZSH" -f "$candidate/.github/scripts/metadata-check.zsh" 2>&1)"; then
-    test_failure 'metadata rejects referenced compatibility research that is present but untracked'
+    test_failure 'metadata rejects a glyph matrix that is present but untracked'
   fi
   assert_contains "$output" \
-    'required file is not tracked: docs/research/spaceship-ip-load-order.md' \
-    'metadata failure reaches the trackedness guard'
+    'required file is not tracked: docs/research/supabase-terminal-glyph-matrix.md' \
+    'metadata failure reaches the glyph-matrix trackedness guard'
+
+  command git -C "$candidate" add -- docs/research/supabase-terminal-glyph-matrix.md || return 1
+  command git -C "$candidate" rm --cached --quiet -- \
+    docs/beta/v0.2-beta.4-second-tester-templates.md || return 1
+  if output="$("$RELEASE_TEST_ZSH" -f "$candidate/.github/scripts/metadata-check.zsh" 2>&1)"; then
+    test_failure 'metadata rejects a beta template that is present but untracked'
+  fi
+  assert_contains "$output" \
+    'required file is not tracked: docs/beta/v0.2-beta.4-second-tester-templates.md' \
+    'metadata failure reaches the beta-template trackedness guard'
+
+  command git -C "$candidate" add -- docs/beta/v0.2-beta.4-second-tester-templates.md || return 1
+  command git -C "$candidate" rm --cached --quiet -- \
+    tests/manual/render-glyph-matrix.zsh || return 1
+  if output="$("$RELEASE_TEST_ZSH" -f "$candidate/.github/scripts/metadata-check.zsh" 2>&1)"; then
+    test_failure 'metadata rejects an untracked glyph fixture'
+  fi
+  assert_contains "$output" \
+    'required file is not tracked: tests/manual/render-glyph-matrix.zsh' \
+    'metadata failure reaches the glyph-fixture trackedness guard'
 
   cleanup_release_test_dir "$tmp"
   return 0
 }
 
-test_public_tree_allows_only_the_reviewed_screenshot() {
+test_public_tree_allows_only_reviewed_visual_and_manual_artifacts() {
   local tmp='' candidate='' output=''
   new_test_dir || return 1
   tmp="$REPLY"
@@ -487,6 +514,16 @@ test_public_tree_allows_only_the_reviewed_screenshot() {
   assert_contains "$output" 'docs/assets/unreviewed.png' \
     'the public tree audit reports the exact unreviewed image path'
 
+  command git -C "$candidate" rm --cached --quiet -- docs/assets/unreviewed.png || return 1
+  command cp "$candidate/tests/manual/render-glyph-matrix.zsh" \
+    "$candidate/tests/manual/unreviewed.zsh" || return 1
+  command git -C "$candidate" add tests/manual/unreviewed.zsh || return 1
+  if output="$("$RELEASE_TEST_ZSH" -f "$candidate/.github/scripts/public-tree-audit.zsh" 2>&1)"; then
+    test_failure 'the public tree audit rejects an unreviewed manual fixture'
+  fi
+  assert_contains "$output" 'tests/manual/unreviewed.zsh' \
+    'the public tree audit reports the exact unreviewed manual fixture'
+
   cleanup_release_test_dir "$tmp"
   return 0
 }
@@ -498,6 +535,6 @@ test_case 'valid beta preflight reaches prerelease creation dry-run' test_valid_
 test_case 'preflight extracts only the literal matching beta changelog section' test_preflight_extracts_only_the_exact_beta_section
 test_case 'preflight rejects mismatched, lightweight, non-main, and missing-note tags' test_release_preflight_rejects_tag_and_history_failures
 test_case 'duplicate refusal and beta release command behavior are retained' test_duplicate_refusal_and_beta_dry_run
-test_case 'metadata requires pinned compatibility research in the release tree' test_metadata_requires_pinned_compatibility_research
-test_case 'public tree allows only the reviewed screenshot asset' test_public_tree_allows_only_the_reviewed_screenshot
+test_case 'metadata requires release-evidence artifacts in the release tree' test_metadata_requires_release_evidence_artifacts
+test_case 'public tree allows only reviewed visual and manual artifacts' test_public_tree_allows_only_reviewed_visual_and_manual_artifacts
 finish_tests

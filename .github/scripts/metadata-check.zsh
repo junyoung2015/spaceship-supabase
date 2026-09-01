@@ -28,9 +28,13 @@ for doc in \
   docs/design/v0.2-target-context-contract.md \
   docs/assets/spaceship-supabase-terminal.png \
   docs/research/readme-terminal-screenshot.md \
+  docs/research/supabase-terminal-glyph-matrix.md \
   docs/research/supabase-project-and-branch-context.md \
   docs/research/spaceship-ip-load-order.md \
-  docs/research/supabase-cli-project-names.md docs/releases/v0.1.0-release-plan.md; do
+  docs/research/supabase-cli-project-names.md \
+  docs/beta/v0.2-beta.4-second-tester-templates.md \
+  docs/releases/v0.1.0-release-plan.md \
+  tests/manual/render-glyph-matrix.zsh; do
   require_file "$doc"
 done
 
@@ -84,9 +88,12 @@ for doc in \
   docs/design/v0.2-target-context-contract.md \
   docs/assets/spaceship-supabase-terminal.png \
   docs/research/readme-terminal-screenshot.md \
+  docs/research/supabase-terminal-glyph-matrix.md \
   docs/research/supabase-project-and-branch-context.md \
   docs/research/spaceship-ip-load-order.md \
-  docs/research/supabase-cli-project-names.md docs/releases/v0.1.0-release-plan.md; do
+  docs/research/supabase-cli-project-names.md \
+  docs/beta/v0.2-beta.4-second-tester-templates.md \
+  docs/releases/v0.1.0-release-plan.md; do
   if ! grep -Fq "$doc" README.md; then
     fail "README.md must link to $doc"
   fi
