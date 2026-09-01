@@ -25,7 +25,7 @@ test_documented_defaults() {
   assert_eq true "$SPACESHIP_SUPABASE_ASYNC" 'ASYNC defaults to true'
   assert_eq cyan "$SPACESHIP_SUPABASE_COLOR" 'COLOR defaults to cyan'
   assert_eq '🔷 ' "$SPACESHIP_SUPABASE_SYMBOL" 'SYMBOL defaults to the blue diamond'
-  assert_eq '' "$SPACESHIP_SUPABASE_PREFIX" 'PREFIX defaults to empty'
+  assert_eq 'at ' "$SPACESHIP_SUPABASE_PREFIX" 'PREFIX defaults to the target/context preposition'
   assert_eq ' ' "$SPACESHIP_SUPABASE_SUFFIX" 'SUFFIX follows Spaceship default suffix'
   assert_eq ref "$SPACESHIP_SUPABASE_FORMAT" 'FORMAT defaults to ref'
   assert_eq false "$SPACESHIP_SUPABASE_SHOW_LOCAL_DB_BRANCH" 'local DB branch is opt-in'
@@ -40,6 +40,81 @@ test_documented_defaults() {
   (( $+functions[spaceship_supabase_sync] )) || test_failure 'explicit sync helper is defined'
   (( $+functions[spaceship_supabase_doctor] )) || test_failure 'doctor helper is defined'
   (( $+functions[spaceship::section::v4] )) || test_failure 'actual Spaceship v4 section API is available'
+
+  remove_test_dir "$tmp"
+  return 0
+}
+
+test_default_prefix_renders_after_prior_context() {
+  local tmp='' root='' output_file='' tuple='' rendered='' standalone=''
+  local SPACESHIP_PROMPT_PREFIXES_SHOW=true
+  local _spaceship_prompt_opened=true
+  new_test_dir || return 1
+  tmp="$REPLY"
+  root="$tmp/project"
+  output_file="$tmp/section.out"
+  XDG_STATE_HOME="$tmp/state"
+  reset_public_configuration
+  load_plugin_runtime || {
+    remove_test_dir "$tmp"
+    return 1
+  }
+  materialize_project "$root" 2.113.0 "$REF_LIVE" || {
+    remove_test_dir "$tmp"
+    return 1
+  }
+  cd "$root" || return 1
+
+  assert_success 'default-prefix section render succeeds' render_section_to "$output_file"
+  read_file "$output_file"
+  tuple="$REPLY"
+  assert_contains "$tuple" 'at ' 'default tuple retains the contextual prefix'
+  render_prompt_tuple "$tuple"
+  rendered="$REPLY"
+  assert_contains "$rendered" 'at ' 'actual Spaceship v4 rendering separates a prior context from Supabase'
+  assert_contains "$rendered" '🔷 ' 'actual Spaceship v4 rendering keeps the symbol independent of its prefix'
+
+  _spaceship_prompt_opened=false
+  render_prompt_tuple "$tuple"
+  standalone="$REPLY"
+  assert_not_contains "$standalone" 'at ' 'Spaceship suppresses the prefix for the first effective section'
+  assert_contains "$standalone" '🔷 ' 'first-section prefix suppression retains the symbol'
+  assert_contains "$standalone" "$REF_LIVE" 'first-section prefix suppression retains the full ref'
+
+  remove_test_dir "$tmp"
+  return 0
+}
+
+test_explicit_empty_prefix_remains_empty() {
+  local tmp='' root='' output_file='' tuple='' rendered=''
+  local SPACESHIP_PROMPT_PREFIXES_SHOW=true
+  local _spaceship_prompt_opened=true
+  new_test_dir || return 1
+  tmp="$REPLY"
+  root="$tmp/project"
+  output_file="$tmp/section.out"
+  XDG_STATE_HOME="$tmp/state"
+  reset_public_configuration
+  SPACESHIP_SUPABASE_PREFIX=''
+  load_plugin_runtime || {
+    remove_test_dir "$tmp"
+    return 1
+  }
+  materialize_project "$root" 2.113.0 "$REF_LIVE" || {
+    remove_test_dir "$tmp"
+    return 1
+  }
+  cd "$root" || return 1
+
+  assert_eq '' "$SPACESHIP_SUPABASE_PREFIX" 'explicit empty prefix overrides the at default'
+  assert_success 'empty-prefix section render succeeds' render_section_to "$output_file"
+  read_file "$output_file"
+  tuple="$REPLY"
+  render_prompt_tuple "$tuple"
+  rendered="$REPLY"
+  assert_not_contains "$rendered" 'at ' 'explicit empty prefix remains absent from actual Spaceship v4 rendering'
+  assert_contains "$rendered" '🔷 ' 'explicit empty prefix retains the symbol in actual rendering'
+  assert_contains "$rendered" "$REF_LIVE" 'explicit empty prefix retains the full ref in actual rendering'
 
   remove_test_dir "$tmp"
   return 0
@@ -176,6 +251,8 @@ test_ref_format_keeps_the_full_reference() {
 }
 
 test_case 'documented defaults and public commands' test_documented_defaults
+test_case 'default prefix separates Supabase after prior context' test_default_prefix_renders_after_prior_context
+test_case 'an explicit empty prefix remains an opt-out' test_explicit_empty_prefix_remains_empty
 test_case 'retired alpha settings stay absent' test_alpha_settings_are_not_reintroduced
 test_case 'visual settings are packed by actual Spaceship v4' test_visual_settings_reach_the_v4_section
 test_case 'SHOW=false remains silent and read-only' test_show_false_is_silent_before_state_is_required

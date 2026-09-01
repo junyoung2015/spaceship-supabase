@@ -12,6 +12,13 @@ With `SPACESHIP_SUPABASE_FORMAT="label+ref"`, a valid label decorates an identit
 
 The exact reference remains visible. If live identity disappears, is malformed, or is unsafe, the label cannot make a segment appear. If a valid configured mapping is the active identity, its required `configured:<remote>` marker remains visible.
 
+Prompt placement is independent of labels. The beta.4 installation default
+places the section on Spaceship's first status/context line before a present
+`line_sep`, prefixes it with `at ` when it follows earlier prompt context, and
+leaves the prompt character on the next line in the default two-line layout;
+it neither changes a label's eligibility nor causes label state to be read or
+written differently.
+
 ## Storage
 
 By default, labels are enabled and stored at:

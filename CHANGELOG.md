@@ -6,6 +6,41 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.2.0-beta.4]
+
+### Changed
+
+- Made the documented default registration place `supabase` before Spaceship's
+  optional `line_sep`, so the normal two-line prompt keeps the full validated
+  project identity on its status/context line and keeps the prompt character
+  on the following line.
+- Made `at ` the default Supabase section prefix, separating it from a
+  preceding context section and presenting the full ref as target/context
+  information. The preposition does not establish identity provenance, and an
+  explicitly empty `SPACESHIP_SUPABASE_PREFIX` remains a compact-style opt-out.
+- Documented the two explicit layout choices that remain user-owned: disable
+  `SPACESHIP_PROMPT_SEPARATE_LINE` for one physical prompt line, or register
+  before `char` to place the identity beside the prompt character.
+- Documented the Oh My Zsh `spaceship-ip` load-order compatibility setting.
+  Reapplying its suffix after Spaceship core initialization preserves the
+  standard boundary before the Supabase `at ` context marker. Pinned the
+  upstream load-order evidence and added a deterministic real-Spaceship v4
+  regression case for the broken and repaired boundaries.
+- Documented that a beta.3-to-beta.4 tag checkout does not migrate user-owned
+  `.zshrc` registration, and separated plugin-tag rollback from host prompt
+  configuration rollback.
+- Bounded stable v0.2 to exact-ref identity, manual labels, and explicit
+  `synced:project` decoration. Automatic hosted-branch discovery is now a
+  separately gated post-v0.2 discovery item rather than a stable blocker.
+- Reconciled the private beta cohort and vulnerability-reporting guidance:
+  beta.3 authorization does not carry forward to beta.4, whose exact-tag cohort
+  requires a new explicit decision in #15. GitHub's advisory route is used only
+  when accessible to the reporter, with an explicitly agreed direct maintainer
+  channel as the authorized-cohort fallback and a metadata-only public contact
+  request for reporters who have neither private route.
+- Superseded the immutable `v0.2.0-beta.3` candidate without changing identity
+  selection, sync scope, or the local-only trust boundary.
+
 ## [0.2.0-beta.3]
 
 ### Fixed

@@ -13,29 +13,46 @@
 
 That default segment means a valid local linked-project reference was found beneath the current project boundary. It does **not** automatically claim a friendly project name, a hosted Supabase Branch, remote status, credentials, network freshness, or the state of a deployment. The full 20-character reference is always shown so the prompt remains unambiguous.
 
-The `v0.2.0-beta.3` candidate carries one explicitly confirmed, point-in-time
+When it follows another prompt section, beta.4's default contextual prefix is
+`at `, so a normal prompt reads `… at 🔷 abcdefghijklmnopqrst`. Spaceship hides
+the prefix of its first effective section by default, which is why the compact
+standalone example above begins directly with the symbol. `at ` is a
+section-level target/context preposition; it does not prove live-link,
+environment, authorization, credential, or freshness state.
+
+The `v0.2.0-beta.4` candidate carries one explicitly confirmed, point-in-time
 project-name decoration after a user runs a command. It remains off by default,
 keeps the full ref visible, says `synced:project`, and never does a remote
-lookup while a prompt is drawn. It may be used for maintainer-only private
-dogfood only after its reviewed annotated tag has passed the release gate and
-published a GitHub prerelease; it is not a stable release and does not authorize
-external or phase-2-alpha invitations. The earlier `v0.2.0-beta.1` tag is
-immutable but rejected and unpublished, so it must not be installed or reused.
-The published `v0.2.0-beta.2` prerelease found that current v2.111.0+
-projects-list JSON envelope incompatibility safely and wrote no decoration;
-it remains immutable and is superseded for that sync path. beta.3 carries the
-focused repair from [#27](https://github.com/junyoung2015/spaceship-supabase/issues/27)
-and requires its own reviewed prerelease before current-style sync is relied on.
+lookup while a prompt is drawn. beta.4 also makes the documented installation
+default place the section with the status context when Spaceship has a
+`line_sep`; a user can still opt into prompt-line placement. It may be used for
+maintainer-only private dogfood only after its reviewed annotated tag has passed
+the release gate, published a GitHub prerelease, and received an explicit
+beta.4 authorization in [#15](https://github.com/junyoung2015/spaceship-supabase/issues/15);
+it is not a stable release and does not authorize external or phase-2-alpha
+invitations. The earlier `v0.2.0-beta.1` tag is immutable but rejected and
+unpublished, so it must not be installed or reused. The published
+`v0.2.0-beta.2` prerelease found that
+current v2.111.0+ projects-list JSON envelope incompatibility safely and wrote
+no decoration; it remains immutable and is superseded for that sync path.
+`v0.2.0-beta.3` carried the focused [#27](https://github.com/junyoung2015/spaceship-supabase/issues/27)
+repair and remains immutable. beta.4 is its successor candidate.
+
+Stable v0.2 is deliberately bounded to exact-ref identity, manual labels, and
+the opt-in top-level `synced:project` path. Automatic hosted-branch discovery
+and `synced:hosted-branch` output are post-v0.2 work; a manual label bound to a
+hosted branch ref is the supported recognizable form in v0.2.
 
 The project started from a practical safety need: Supabase commands can mutate
 a hosted target while the terminal provides no persistent, recognizable target
 context. The stable `v0.1.1` release establishes a truthful full-ref safety
-baseline, with a ref-only default display. The `v0.2.0-beta.3` private-dogfood
+baseline, with a ref-only default display. The `v0.2.0-beta.4` private-dogfood
 candidate carries the beta.1-defined behavior without adding prompt-time network
-access or hiding the authoritative ref. Its only additional scope is the
-merged current-CLI compatibility repair. The accepted vocabulary, exact v0.2 prompt
-forms, privacy defaults, and manual-label/synced-decoration precedence are
-recorded in the [v0.2 target-context contract](docs/design/v0.2-target-context-contract.md).
+access or hiding the authoritative ref. It retains beta.3's merged current-CLI
+compatibility repair and adds documented, host-owned prompt placement plus the
+contextual, provenance-neutral `at ` target/context prefix. The accepted vocabulary,
+exact v0.2 prompt forms, privacy defaults, and
+manual-label/synced-decoration precedence are recorded in the [v0.2 target-context contract](docs/design/v0.2-target-context-contract.md).
 
 ## Requirements
 
@@ -50,10 +67,14 @@ No Supabase CLI executable, network access, credential lookup, Node, Python, or 
 
 ### Oh My Zsh
 
-Install and configure Spaceship Prompt first. Clone the current release into your custom plugin directory:
+Install and configure Spaceship Prompt first. The beta.4 command below is for
+an explicitly authorized maintainer only, after the reviewed tag has published
+a GitHub prerelease and [#15](https://github.com/junyoung2015/spaceship-supabase/issues/15)
+authorizes that exact beta.4 cohort. Then clone the exact tag into your custom
+plugin directory:
 
 ```zsh
-git clone --depth 1 --branch v0.1.1 https://github.com/junyoung2015/spaceship-supabase.git \
+git clone --depth 1 --branch v0.2.0-beta.4 https://github.com/junyoung2015/spaceship-supabase.git \
   "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/spaceship-supabase"
 ```
 
@@ -66,23 +87,58 @@ Spaceship theme, then register the external section in the prompt order:
 ZSH_THEME="spaceship"
 source "$ZSH/oh-my-zsh.sh"
 
+# Only when `spaceship-ip` is in plugins=(...): restore the suffix it captured
+# before the Spaceship theme initialized its default section separator.
+if (( ${+functions[spaceship_ip]} )); then
+  SPACESHIP_IP_SUFFIX="$SPACESHIP_PROMPT_DEFAULT_SUFFIX"
+fi
+
 source "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/spaceship-supabase/spaceship-supabase.plugin.zsh"
 
-# Add the custom section once, before the prompt character.
+# Default: keep the project identity on the status/context line. If the host
+# has no line separator, retain the safe prompt-character fallback.
 if (( ${SPACESHIP_PROMPT_ORDER[(Ie)supabase]} == 0 )); then
-  spaceship add --before char supabase
+  if (( ${SPACESHIP_PROMPT_ORDER[(Ie)line_sep]} != 0 )); then
+    spaceship add --before line_sep supabase
+  else
+    spaceship add --before char supabase
+  fi
 fi
 ```
 
-Restart the shell or run `source ~/.zshrc`.
+#### Oh My Zsh `spaceship-ip` compatibility
+
+If `spaceship-ip` is also in Oh My Zsh's `plugins=(...)` list, Oh My Zsh loads
+it before Spaceship initializes its default section suffix. Directly after the
+Oh My Zsh source line, restore the IP section's normal trailing separator
+before sourcing or registering Supabase. The complete order is shown in the
+installation block above; do not source Spaceship a second time merely to apply
+this assignment:
+
+```zsh
+ZSH_THEME="spaceship"
+source "$ZSH/oh-my-zsh.sh"
+SPACESHIP_IP_SUFFIX="$SPACESHIP_PROMPT_DEFAULT_SUFFIX"
+source "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/spaceship-supabase/spaceship-supabase.plugin.zsh"
+```
+
+That produces `… @ <ip> at 🔷 <ref>`. Do not add leading whitespace to
+`SPACESHIP_SUPABASE_PREFIX` or `SPACESHIP_SUPABASE_SYMBOL`: standard
+Spaceship v4 sections own the separator after their own content. See the
+[pinned load-order research](docs/research/spaceship-ip-load-order.md) for the
+upstream evidence and regression-test boundary.
+
+Restart with `exec zsh`. Re-sourcing an already initialized shell does not move
+an existing idempotently registered section.
 
 ### Generic Zsh
 
-Clone the current release wherever you keep prompt plugins, then source
+After the same beta.4 publication and explicit-authorization gates above are
+complete, clone the exact tag wherever you keep prompt plugins, then source
 Spaceship Prompt before the section. This example uses a local-share directory:
 
 ```zsh
-git clone --depth 1 --branch v0.1.1 https://github.com/junyoung2015/spaceship-supabase.git \
+git clone --depth 1 --branch v0.2.0-beta.4 https://github.com/junyoung2015/spaceship-supabase.git \
   "$HOME/.local/share/spaceship-supabase"
 ```
 
@@ -92,45 +148,95 @@ Adjust the Spaceship path to your installation:
 source "$HOME/.local/share/spaceship/spaceship.zsh"
 source "$HOME/.local/share/spaceship-supabase/spaceship-supabase.plugin.zsh"
 
-# Add the custom section once, before the prompt character.
+# Default: keep the project identity on the status/context line. If the host
+# has no line separator, retain the safe prompt-character fallback.
 if (( ${SPACESHIP_PROMPT_ORDER[(Ie)supabase]} == 0 )); then
-  spaceship add --before char supabase
+  if (( ${SPACESHIP_PROMPT_ORDER[(Ie)line_sep]} != 0 )); then
+    spaceship add --before line_sep supabase
+  else
+    spaceship add --before char supabase
+  fi
 fi
 ```
 
 The registration guard is intentional and idempotent. A loaded external section
 is not rendered until it is named in `SPACESHIP_PROMPT_ORDER`; repeatedly
-running `spaceship add` without the guard would duplicate the section. For
-either installation route, make configuration assignments before the next
+running `spaceship add` without the guard would duplicate the section. The
+default prefers the context side of Spaceship's optional `line_sep`, so the
+section stays beside status information in the normal two-line Spaceship
+layout (`SPACESHIP_PROMPT_SEPARATE_LINE=true`, the Spaceship default). Its
+intended shape is:
+
+```text
+<status and context> at 🔷 abcdefghijklmnopqrst
+➜
+```
+
+The integration does not set `SPACESHIP_PROMPT_SEPARATE_LINE` or otherwise
+override the shell's global layout choice.
+
+To keep the entire prompt on one physical line, set this Spaceship setting:
+
+```zsh
+SPACESHIP_PROMPT_SEPARATE_LINE=false
+```
+
+To deliberately put the Supabase section on the prompt-character line instead,
+replace the default registration target with `char`:
+
+```zsh
+if (( ${SPACESHIP_PROMPT_ORDER[(Ie)supabase]} == 0 )); then
+  spaceship add --before char supabase
+fi
+```
+
+For either installation route, make configuration assignments before the next
 prompt is drawn. The section can be loaded once and reconfigured in the current
 shell.
 
 ### Tagged updates, private dogfooding, and rollback
 
-v0.1.1 deliberately has no auto-updater or `curl | sh` installer. A prompt
+The beta deliberately has no auto-updater or `curl | sh` installer. A prompt
 plugin runs in your interactive shell, so use an explicit release tag that you
-can inspect and roll back. From a clone installed by the instructions above:
+can inspect and roll back. Run the beta.4 update only after its reviewed
+prerelease exists and #15 explicitly authorizes you for that exact tag. From a
+clone installed by the instructions above:
 
 ```zsh
 # Set this to the clone you installed. This is the Oh My Zsh default.
 plugin_dir="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/spaceship-supabase"
 git -C "$plugin_dir" fetch --tags --prune origin
-git -C "$plugin_dir" show --no-patch --format=fuller v0.1.1
-git -C "$plugin_dir" checkout --detach v0.1.1
+git -C "$plugin_dir" show --no-patch --format=fuller v0.2.0-beta.4
+git -C "$plugin_dir" checkout --detach v0.2.0-beta.4
 exec zsh
 ```
 
-Replace `v0.1.1` only after reviewing the next release's notes and tag. While
+Replace `v0.2.0-beta.4` only after reviewing the next release's notes and tag. While
 the repository is private, these commands require authenticated GitHub read
-access. To roll back, check out a previous reviewed tag with the same command.
+access. To roll back the plugin, check out a previous reviewed tag with the
+same command. A tag checkout does not edit `.zshrc`: restoring an earlier
+physical prompt layout also requires restoring that release's prompt-order
+registration and starting a fresh shell.
 `v0.2.0-beta.1` is immutable but rejected and unpublished; do not install,
 retag, or republish it. `v0.2.0-beta.2` is published but superseded for
 current-style sync; do not retag it. The
-`v0.2.0-beta.3` successor candidate may be used for maintainer-only private
-dogfood only after its reviewed annotated tag has published a GitHub prerelease.
+`v0.2.0-beta.3` tag is immutable and superseded by the `v0.2.0-beta.4` successor
+candidate, which may be used for maintainer-only private dogfood only after its
+reviewed annotated tag has published a GitHub prerelease and #15 explicitly
+authorizes the beta.4 gate.
 It does not authorize an external beta, phase-2-alpha invitations, or the
 Dongtan-report decision. Use a reviewed beta tag—not a branch—and follow the
 exact [beta install, rollback, verification, and feedback steps](docs/beta-testing.md).
+
+#### Upgrading the host configuration from beta.3
+
+If beta.3 was registered with `spaceship add --before char supabase`, replace
+that old guard with the beta.4 guard shown above. Do not append a second guard.
+Run `exec zsh`, confirm that exactly one `supabase` entry remains, and verify
+the standard order `supabase < line_sep < char`. The new idempotent guard
+cannot relocate a section that is already present in the current shell. The
+[beta guide](docs/beta-testing.md#upgrade-the-prompt-registration-from-beta3)
+also records the separate host-configuration rollback check.
 
 ## Quick verification
 
@@ -147,6 +253,9 @@ If `project-ref` contains exactly 20 lowercase letters, the next prompt includes
 🔷 abcdefghijklmnopqrst
 ```
 
+When this section follows other prompt context—as it does in the documented
+beta.4 registration—the visible form is `at 🔷 abcdefghijklmnopqrst`.
+
 If no segment appears, that is normally intentional fail-closed behavior. Start with [troubleshooting](docs/troubleshooting.md) rather than loosening file permissions or adding shell parsing commands.
 
 ## Common controls
@@ -156,6 +265,8 @@ The default is compact and uses the live local reference:
 ```zsh
 SPACESHIP_SUPABASE_SHOW=true
 SPACESHIP_SUPABASE_FORMAT="ref"
+# Default: "at "; set an explicit empty string to suppress the contextual prefix.
+SPACESHIP_SUPABASE_PREFIX="at "
 ```
 
 You may add a local, manually maintained label while retaining the exact reference:
@@ -206,16 +317,20 @@ A live `project-ref` always wins. The top-level `project_id` in `config.toml` is
 
 ### Explicit synced project name — v0.2 private dogfood
 
-The normal prompt never calls Supabase or exposes a remote project name. After
-the reviewed `v0.2.0-beta.3` annotated tag has published a GitHub prerelease,
-maintainer-private dogfood can deliberately discover the name for the **current
+The normal prompt never calls Supabase or exposes a remote project name. Only
+after the reviewed `v0.2.0-beta.4` annotated tag has published a GitHub
+prerelease **and** the release owner has explicitly authorized the beta.4
+cohort in [#15](https://github.com/junyoung2015/spaceship-supabase/issues/15)
+may an authorized maintainer deliberately discover the name for the **current
 live ref** and save it as a separate, point-in-time decoration:
 
-> **beta.3 candidate scope:** beta.3 accepts the stable current-style
-> v2.111.0+ `{ "projects": [...], "message": "" }` envelope only in the
-> explicit user-invoked helper. It remains fail-closed for missing, unknown,
-> duplicate, malformed, escaped, or nonempty companion fields. Normal live-ref
-> rendering is unaffected and never invokes the CLI.
+> **beta.4 candidate scope:** beta.4 retains beta.3's stable current-style
+> v2.111.0+ `{ "projects": [...], "message": "" }` envelope support only in
+> the explicit user-invoked helper. It remains fail-closed for missing,
+> unknown, duplicate, malformed, escaped, or nonempty companion fields. The
+> only additional beta.4 behavior is presentation: the documented default
+> prompt placement and the default `at ` target/context prefix. Normal
+> live-ref rendering never invokes the CLI.
 
 ```zsh
 spaceship_supabase_sync project

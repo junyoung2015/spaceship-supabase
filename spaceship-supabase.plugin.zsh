@@ -34,13 +34,14 @@ typeset -g _SPACESHIP_SUPABASE_SYSTEM_READY=true
 zmodload zsh/system 2>/dev/null || _SPACESHIP_SUPABASE_SYSTEM_READY=false
 zmodload zsh/datetime 2>/dev/null
 
-# Public configuration.  An explicitly empty setting remains empty so invalid
-# user configuration fails closed instead of silently gaining a new meaning.
+# Public configuration. An explicitly empty visual override remains empty, so
+# users can deliberately suppress the contextual prefix without changing the
+# symbol or identity output.
 SPACESHIP_SUPABASE_SHOW="${SPACESHIP_SUPABASE_SHOW-true}"
 SPACESHIP_SUPABASE_ASYNC="${SPACESHIP_SUPABASE_ASYNC-true}"
 SPACESHIP_SUPABASE_COLOR="${SPACESHIP_SUPABASE_COLOR-cyan}"
 SPACESHIP_SUPABASE_SYMBOL="${SPACESHIP_SUPABASE_SYMBOL-🔷 }"
-SPACESHIP_SUPABASE_PREFIX="${SPACESHIP_SUPABASE_PREFIX-}"
+SPACESHIP_SUPABASE_PREFIX="${SPACESHIP_SUPABASE_PREFIX-at }"
 SPACESHIP_SUPABASE_SUFFIX="${SPACESHIP_SUPABASE_SUFFIX-${SPACESHIP_PROMPT_DEFAULT_SUFFIX-}}"
 SPACESHIP_SUPABASE_FORMAT="${SPACESHIP_SUPABASE_FORMAT-ref}"
 SPACESHIP_SUPABASE_SHOW_LOCAL_DB_BRANCH="${SPACESHIP_SUPABASE_SHOW_LOCAL_DB_BRANCH-false}"

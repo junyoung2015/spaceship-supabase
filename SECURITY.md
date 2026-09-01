@@ -2,15 +2,32 @@
 
 ## Report a vulnerability privately
 
-Please **do not open a public GitHub issue** for a suspected security vulnerability.
+Please **do not put vulnerability details, reproduction steps, impact, affected
+revisions, secrets, project state, or exploit information in a public GitHub
+issue**.
 
-Use the repository's private vulnerability-reporting route to submit a GitHub Security Advisory:
+When GitHub exposes the repository's private vulnerability-reporting route to
+your account, submit a GitHub Security Advisory:
 
 <https://github.com/junyoung2015/spaceship-supabase/security/advisories/new>
 
-Include a minimal reproduction, the affected revision, expected and observed behavior, and impact. Do not include Supabase access tokens, service-role keys, passwords, full local paths, production configuration, or a real project reference unless the maintainer explicitly asks through the private report.
+Confirm that the page is accessible before beginning beta testing; private
+repository access alone does not prove that GitHub grants advisory-creation
+permission to every collaborator. Include a minimal reproduction, the affected
+revision, expected and observed behavior, and impact. Do not include Supabase
+access tokens, service-role keys, passwords, full local paths, production
+configuration, or a real project reference unless the maintainer explicitly
+asks through the private report.
 
-If the private route is unavailable, do not post the report or technical details in a public issue. Use an existing private channel with the maintainer to request an alternate reporting route.
+If the advisory route is unavailable, do not post the report or technical
+details in an issue. Members of the authorized maintainer-private beta cohort
+must use their pre-agreed direct private channel to the release owner. Anyone
+without such a channel may open the repository's
+[metadata-only private-contact request](https://github.com/junyoung2015/spaceship-supabase/issues/new?template=security_contact.yml).
+That public request must contain no vulnerability detail at all; it exists only
+so the maintainer can provide an alternate private route. Move the report to
+that route before sharing any technical information. No external invitation
+should proceed until its intended reporters have a tested private route.
 
 ## Supported versions
 

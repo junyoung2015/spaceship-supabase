@@ -9,23 +9,39 @@ they do not replace the latest stable release.
 release gate failed before GitHub publication. Do not install, retag, or
 republish it. `v0.2.0-beta.2` is an immutable published prerelease, but its
 current-style explicit-sync path is superseded by `v0.2.0-beta.3`. beta.3 is
-the sole successor candidate for maintainer-only private dogfood. Use the
-commands below only after its reviewed annotated tag has passed the release
-gate and a GitHub prerelease exists.
+immutable and carried the narrow [#27](https://github.com/junyoung2015/spaceship-supabase/issues/27)
+repair for the stable current-style envelope. `v0.2.0-beta.4` is the sole
+successor candidate for maintainer-only private dogfood. Use the commands below
+only after its reviewed annotated tag has passed the release gate and a GitHub
+prerelease exists **and** the release owner has explicitly authorized beta.4
+testing in [#15](https://github.com/junyoung2015/spaceship-supabase/issues/15).
 
-> **beta.3 candidate scope:** beta.3 carries the narrow [#27](https://github.com/junyoung2015/spaceship-supabase/issues/27)
-> repair for the stable current-style v2.111.0+ `{ "projects": [...],
-> "message": "" }` envelope. It still rejects missing, unknown, duplicate,
-> malformed, escaped, or nonempty companion fields and saves no state on a
-> failure. Normal local live-ref rendering is unaffected.
+beta.3 test and dogfood evidence may support unchanged identity, sync, and
+prompt-safety code, but it is not beta.4 acceptance or authorization. beta.4
+must first exist as an immutable reviewed tag. The release owner must then
+explicitly authorize the beta.4 gate in #15; each person authorized by that
+decision must repeat the Core matrix plus the changed prefix, layout, migration,
+and rollback observations before the release owner records `go`, `extend`, or
+`pause` in [#15](https://github.com/junyoung2015/spaceship-supabase/issues/15).
+
+> **beta.4 candidate scope:** beta.4 retains beta.3's strict support for the
+> v2.111.0+ `{ "projects": [...], "message": "" }` envelope. It adds the
+> documented default that registers the prompt section before Spaceship's
+> optional `line_sep`, uses the contextual `at ` prefix before the project
+> symbol, keeps the identity on the status/context line, and leaves the prompt
+> character on the following line under Spaceship's default two-line layout.
+> It does not change identity resolution, the prompt-time trust boundary, or
+> explicit-sync scope. Missing, unknown, duplicate, malformed, escaped, or
+> nonempty companion fields still save no state. An explicit empty section
+> prefix remains a user-owned compact-style opt-out.
 
 ## Install or move to a reviewed beta
 
-For a new installation after beta.3 is published, pin the exact tag while
-cloning:
+For a new installation after beta.4 is published **and** #15 explicitly
+authorizes you for that exact tag, pin the tag while cloning:
 
 ```zsh
-release_tag='v0.2.0-beta.3'
+release_tag='v0.2.0-beta.4'
 git clone --depth 1 --branch "$release_tag" https://github.com/junyoung2015/spaceship-supabase.git \
   "$HOME/.local/share/spaceship-supabase"
 ```
@@ -34,7 +50,7 @@ For an existing clone, inspect the exact tag before checking it out:
 
 ```zsh
 plugin_dir="$HOME/.local/share/spaceship-supabase"
-release_tag='v0.2.0-beta.3'
+release_tag='v0.2.0-beta.4'
 
 git -C "$plugin_dir" fetch --tags --prune origin
 git -C "$plugin_dir" show --no-patch --format=fuller "$release_tag"
@@ -49,6 +65,36 @@ Use the location where you installed the plugin. Oh My Zsh’s default is
 During private dogfood, the clone/fetch requires an account with read access to
 the repository (or its SSH clone URL). The exact same tag-pinned procedure
 works for a later public beta without authentication.
+
+## Upgrade the prompt registration from beta.3
+
+Checking out beta.4 updates the plugin, but it does not edit user-owned
+`.zshrc` configuration. An existing beta.3 installation that still has:
+
+```zsh
+if (( ${SPACESHIP_PROMPT_ORDER[(Ie)supabase]} == 0 )); then
+  spaceship add --before char supabase
+fi
+```
+
+must **replace that block**, not append another one, with the beta.4 guard:
+
+```zsh
+if (( ${SPACESHIP_PROMPT_ORDER[(Ie)supabase]} == 0 )); then
+  if (( ${SPACESHIP_PROMPT_ORDER[(Ie)line_sep]} != 0 )); then
+    spaceship add --before line_sep supabase
+  else
+    spaceship add --before char supabase
+  fi
+fi
+```
+
+Start a fresh shell with `exec zsh`; re-sourcing an already initialized shell
+does not move an existing idempotently registered section. Verify that exactly
+one `supabase` entry exists and, in the standard two-line layout, its order is
+`supabase < line_sep < char`. The expected visible result is
+`<status/context> at 🔷 <ref>` followed by `➜` on the next line. Do not paste
+the real ref into feedback.
 
 ## Roll back
 
@@ -68,6 +114,21 @@ exec zsh
 The checkout is deliberately detached: it keeps the installed prompt tied to
 the tag you inspected and prevents `git pull` from silently moving it.
 
+Tag rollback does not undo `.zshrc` changes. If the rollback must also restore
+the pre-beta.4 prompt-line layout, replace the beta.4 registration guard with
+the earlier `spaceship add --before char supabase` guard, then run `exec zsh`.
+The `spaceship-ip` suffix repair may remain: it restores that section's normal
+Spaceship separator and is independent of Supabase identity resolution. Record
+plugin-tag rollback and host-configuration rollback as separate observations.
+
+After sourcing the beta, use the documented registration guard in the README.
+Its default puts the section before a present `line_sep`, producing
+`<status/context> at 🔷 <ref>` followed by `➜` on the next line when
+`SPACESHIP_PROMPT_SEPARATE_LINE=true` (the Spaceship default). To show the
+whole prompt on one physical line, set `SPACESHIP_PROMPT_SEPARATE_LINE=false`;
+to put the identity beside the prompt character, explicitly register it before
+`char`.
+
 ## Send ordinary feedback safely
 
 First confirm the pinned revision and capture only redacted diagnostics:
@@ -85,12 +146,21 @@ Do not paste a project reference, manual label, full local path, TOML contents,
 credentials, terminal recording, or `spaceship_supabase_doctor --verbose`
 output unless you have deliberately sanitized it.
 
-## Beta invitations and security findings
+## Private cohort and security findings
 
-The board has not yet approved a private beta invitation/access model or
-verified a private vulnerability-reporting route for this repository. Therefore
-this guide does not authorize beta invitations and does not provide a security
-reporting route. Do not place a security finding in ordinary feedback or a
-public issue. After the board adds and verifies a named private route, use only
-that named route for a suspected vulnerability; until then, no beta invitation
-or security-finding reporting should proceed.
+The current authorization in #15 covers the repository owner and one named
+teammate testing beta.3 only. It does not carry forward to beta.4. After an
+exact reviewed beta.4 tag and prerelease exist, the release owner must record a
+new beta.4 authorization—including cohort, access, confidentiality, reporting
+route, and decision authority—before dogfood begins. Neither the beta.3 decision
+nor a future two-person beta.4 decision authorizes a third tester, an external
+or phase-2-alpha cohort, a visibility change, or a branch-tip installation.
+
+Do not place vulnerability details in ordinary feedback or a GitHub issue. Use
+the repository's [security policy](../SECURITY.md): submit a GitHub Security
+Advisory when GitHub exposes that route to the reporter, otherwise use the
+direct private channel explicitly agreed for the authorized cohort. The
+policy's metadata-only public contact request asks only for a private route; it
+is never a vulnerability report. Confirm that the chosen private route is
+accessible before testing. A later external invitation requires a separately
+approved and tested reporting route.

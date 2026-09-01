@@ -136,11 +136,17 @@ Zsh 5.2 or later is required.
 ## The plugin loads, but its segment is never part of the prompt
 
 Spaceship renders only sections named in `SPACESHIP_PROMPT_ORDER`. After
-sourcing this plugin, register it once before the prompt character:
+sourcing this plugin, use the beta.4 registration guard once. It keeps the
+identity with status/context information when the host has a `line_sep`, while
+preserving a `char` fallback for a one-line or customized prompt order:
 
 ```zsh
 if (( ${SPACESHIP_PROMPT_ORDER[(Ie)supabase]} == 0 )); then
-  spaceship add --before char supabase
+  if (( ${SPACESHIP_PROMPT_ORDER[(Ie)line_sep]} != 0 )); then
+    spaceship add --before line_sep supabase
+  else
+    spaceship add --before char supabase
+  fi
 fi
 ```
 
@@ -148,6 +154,72 @@ Keep that guard after both your Spaceship source line and this plugin's source
 line. It is safe to evaluate on every shell start. Do not use an unguarded
 `spaceship add` line: it adds another `supabase` entry each time the file is
 sourced.
+
+If you upgraded the plugin checkout from beta.3, replace the old guarded
+`spaceship add --before char supabase` block with the beta.4 block above. A tag
+checkout cannot edit `.zshrc`, and appending a second guard does not move an
+already registered section. Start a fresh process with `exec zsh`, then verify
+that `supabase` appears once and precedes `line_sep`, which in turn precedes
+`char`. See the [beta migration and rollback procedure](beta-testing.md#upgrade-the-prompt-registration-from-beta3).
+
+## The segment is on a different line than I expect
+
+The Supabase section does not insert a newline. Spaceship's `line_sep` section
+does. The beta.4 default registration places the identity before that separator,
+so it appears with the status/context line in the standard two-line layout:
+
+```text
+<status and context> at 🔷 abcdefghijklmnopqrst
+➜
+```
+
+Keep `SPACESHIP_PROMPT_SEPARATE_LINE=true` (the Spaceship default) for this
+layout.
+
+If `at 🔷` touches the preceding section, do not add leading whitespace to the
+Supabase prefix or symbol. The normal boundary belongs to the preceding
+Spaceship v4 section's suffix. beta.4's `SPACESHIP_SUPABASE_PREFIX="at "` names
+the project as target/context and separates `at` from `🔷`, but it deliberately
+does not add a second space before itself.
+
+One known case is the third-party `spaceship-ip` plugin loaded through Oh My
+Zsh's `plugins=(...)` list: it loads before Spaceship core defines the default
+suffix and retains an empty IP suffix. After sourcing Spaceship core, set:
+
+```zsh
+SPACESHIP_IP_SUFFIX="$SPACESHIP_PROMPT_DEFAULT_SUFFIX"
+```
+
+Then reload the shell. The adjacent segments should read `… @ <ip> at 🔷 <ref>`.
+The [pinned load-order analysis](research/spaceship-ip-load-order.md) explains
+why the preceding section owns this boundary and what the integration suite
+tests.
+
+Rolling back the plugin tag does not roll back either registration placement or
+the IP suffix assignment in `.zshrc`. Treat tag rollback and host-configuration
+rollback as separate operations; restore the earlier guarded `--before char`
+registration only if you also want the pre-beta.4 prompt-line placement. The IP
+suffix repair can remain because it restores `spaceship-ip`'s ordinary
+Spaceship boundary independently of this plugin.
+
+To make every section and the prompt character use one physical line, set the
+global Spaceship option:
+
+```zsh
+SPACESHIP_PROMPT_SEPARATE_LINE=false
+```
+
+To deliberately show the identity beside the prompt character instead, use the
+following registration guard in place of the default one:
+
+```zsh
+if (( ${SPACESHIP_PROMPT_ORDER[(Ie)supabase]} == 0 )); then
+  spaceship add --before char supabase
+fi
+```
+
+Neither choice changes the resolved project reference, label precedence, or
+the prompt's local-only, read-only behavior.
 
 ## Debugging without leaking state
 

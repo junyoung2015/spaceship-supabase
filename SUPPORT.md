@@ -17,4 +17,7 @@ Share only the redacted output unless a maintainer asks for the sanitized `--ver
 
 If the documentation does not resolve the issue, open a [GitHub Support issue](https://github.com/junyoung2015/spaceship-supabase/issues/new/choose) using the repository's support form. Use the `question` label route for setup and usage questions, the bug form for reproducible defects, and the documentation form for doc corrections.
 
-Security reports must follow [SECURITY.md](SECURITY.md) and must not be opened as public support issues.
+Security reports must follow [SECURITY.md](SECURITY.md) and must not be opened
+as public support issues. If private vulnerability reporting is unavailable and
+you have no established private channel, use only the dedicated metadata-only
+contact-request form; never put report details in that public request.
