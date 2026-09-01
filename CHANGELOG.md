@@ -6,6 +6,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+### Added
+
+* Added a compact documentation index organized by reader goal.
+
+### Changed
+
+* Rebuilt the README around visible prompt examples, stable installation, the safety model, release channels, and clear documentation routes.
+* Clarified that BMad is an optional maintainer planning aid while GitHub issues and milestones carry active work.
+* Pinned stable installation help to the `v0.1.1` documentation so current prerelease guidance cannot change the stable path.
+* Aligned public beta guidance with owner only beta.4 authorization, public repository visibility, and the current `extend` decision in issue 15.
+* Kept stable promotion blocked on issue 9's required two person dogfood evidence and documented the beta specific private reporting route.
+
 ## [0.2.0-beta.4]
 
 ### Changed

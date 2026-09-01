@@ -1,59 +1,68 @@
 # Contributing
 
-Thanks for helping improve `spaceship-supabase`. This project is deliberately small because terminal prompts cross a sensitive trust boundary: input may come from an arbitrary checkout, but output influences what a developer believes they are operating on.
+Thanks for improving `spaceship-supabase`. Prompt output influences which hosted project a developer believes they are using, so identity and filesystem changes receive security review.
 
-## Planning and issues
+## Choose the work
 
-Read the [product roadmap](docs/roadmap.md) before proposing a behavior change.
-GitHub milestones and issues are the active backlog; the private initial-plan
-and BMad archives are historical context only. Open or reference an issue before
-changing identity precedence, target naming, branch semantics, persistence,
-network/CLI boundaries, or the public configuration contract.
+1. Search the [issues](https://github.com/junyoung2015/spaceship-supabase/issues) and milestones for current work.
+2. Read the [roadmap](docs/roadmap.md) before proposing product behavior.
+3. Open or reference an issue before changing identity precedence, target names, branch semantics, persistence, network or CLI boundaries, or public configuration.
 
-Compatibility proposals must cite primary Supabase sources and update or add a
-report under `docs/research/`. A source file existing in a non-stable CLI tree
-or channel is not, by itself, a supported contract.
+Compatibility proposals need primary Supabase sources and a report under `docs/research/`. Evidence from a nonstable CLI tree or channel does not establish a supported contract.
 
-## Local setup
+### Where BMad fits
+
+Maintainers may use BMad for early planning and cross discipline review. GitHub issues and milestones are the current source of truth, and contributors do not need BMad.
+
+## Set up locally
 
 1. Use Zsh 5.2 or later.
-2. Clone the repository and work on a focused branch.
+2. Clone the repository and create a focused branch.
 3. Run the canonical suite before opening a pull request:
 
-   ```sh
+   ```zsh
    ZSH_BIN="$(command -v zsh)" tests/run.zsh
+   ```
+
+4. Run the performance gate for release sensitive work:
+
+   ```zsh
    ZSH_BIN="$(command -v zsh)" tests/run.zsh --performance
    ```
 
-The runner uses tracked vendor dependencies and creates temporary synthetic project layouts. Do not run a network fetch script as part of normal testing.
+The runner uses tracked vendor dependencies and temporary synthetic project layouts.
 
-## Zsh and safety conventions
+## Protect the prompt boundary
 
-- Support Zsh 5.2+ and use Zsh-native code in the prompt path.
-- Keep prompt rendering local-only and read-only: no network, Supabase CLI, Node, Python, jq, credential read, prompt-time write, or persistent render cache.
-- Treat every filesystem value as untrusted. Bound files, reject symlinks, validate values before rendering, and fail closed with no normal stderr output.
-- Never interpolate raw filesystem, TOML, label, or path data into the prompt. Use the supported Spaceship v4 renderer only after strict allowlist validation.
-- A live valid `supabase/.temp/project-ref` always wins. A selected config mapping is marked and non-authoritative; a label can only decorate a currently resolved reference.
-- Do not add an automatic remote lookup, historical identity cache, arbitrary output templates, truncation, branch-only output, or `.supabase/project.json` support without an approved product-contract and security review.
+Read [AGENTS.md](AGENTS.md) for the complete contract and [data sources](docs/data-sources.md) before changing resolver behavior.
 
-Read [AGENTS.md](AGENTS.md) for the complete implementation constraints,
-[docs/data-sources.md](docs/data-sources.md) before changing resolver behavior,
-and the current
-[Supabase CLI target-context research](docs/research/supabase-cli-project-names.md)
-before changing project-name or branch sources.
+| Area | Required behavior |
+| --- | --- |
+| Runtime | Support Zsh 5.2 or later and render through Spaceship v4 |
+| Prompt path | Keep it local, read only, fresh, and free of external processes |
+| Filesystem input | Bound files, reject symlinks, validate accepted values, and fail closed |
+| Identity | Let a valid live project ref win and keep lower authority sources visibly marked |
+| Output | Pass only allowlisted values to the renderer and retain the complete ref |
+| Scope changes | Require product contract and security review for new identity sources or formats |
 
-## Tests and fixtures
+Project names and branch sources also require the current [target context research](docs/research/supabase-cli-project-names.md).
 
-Add or update behavior tests for every behavior change. Security-sensitive changes need positive and negative coverage, including the actual Spaceship v4 rendering path where relevant. Fixtures must be flat, synthetic, tracked inputs; materialize runtime layouts only under a temporary directory. Never commit real Supabase state, a project ref from a real account, credentials, a home-directory path, or an ignored runtime tree.
+## Add tests and fixtures
 
-Do not trade explicit critical failure-path tests for an xtrace percentage. Review the behavior matrix in [docs/testing.md](docs/testing.md).
+Cover each behavior change with positive and negative cases. Security sensitive changes need the real Spaceship v4 rendering path where relevant. Keep fixtures flat, synthetic, tracked, and free of real project state, credentials, account refs, home directory paths, and captured Supabase directories.
 
-## Documentation and changelog
+Review the behavior matrix in [testing](docs/testing.md). Preserve explicit failure path tests when measuring coverage.
 
-Keep `README.md`, configuration, data-source, label, troubleshooting, compatibility, and testing documentation synchronized with implementation. Update `CHANGELOG.md` under `Unreleased` for user-visible changes. During a version cut, the release manager adds one undated exact section for the candidate: stable releases use `## [X.Y.Z]`, while an approved beta uses only `## [X.Y.Z-beta.N]` where every core identifier has no leading zero and `N` is a positive canonical decimal integer. The matching annotated tag is `vX.Y.Z` or `vX.Y.Z-beta.N`; the sanitized public release commit may add its ISO date before that tag is pushed. Contributors should not pre-date a future release. For the tag-pinned beta installation, rollback, and safe feedback flow, see [beta testing](docs/beta-testing.md).
+## Keep documentation aligned
 
-If a stable Supabase CLI layout changes, add a synthetic versioned fixture, document the evidence and compatibility impact, and retain the previous supported fixture until the support policy changes.
+Update the README, configuration, data sources, labels, troubleshooting, compatibility, testing, and changelog when public behavior changes. Contributors leave release dates to the sanitized release commit. The [beta testing guide](docs/beta-testing.md) defines prerelease installation and rollback.
 
-## Pull requests
+## Pull request checklist
 
-Keep pull requests focused, explain the user-visible and security impact, list test commands and results, and flag compatibility or documentation changes. Do not include secrets, raw user paths, local Supabase files, generated archives, or unrelated formatting churn. Security issues must follow [SECURITY.md](SECURITY.md), not a pull request or public issue.
+* Keep the change focused.
+* Explain user visible behavior and security impact.
+* List each test command and result.
+* Flag compatibility and documentation effects.
+* Remove secrets, raw user paths, local Supabase state, and unrelated formatting churn.
+
+Report security issues through [SECURITY.md](SECURITY.md). Keep vulnerability details out of pull requests and public issues.

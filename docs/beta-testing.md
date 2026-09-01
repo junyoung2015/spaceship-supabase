@@ -12,18 +12,23 @@ current-style explicit-sync path is superseded by `v0.2.0-beta.3`. beta.3 is
 immutable and carried the narrow [#27](https://github.com/junyoung2015/spaceship-supabase/issues/27)
 repair for the stable current-style envelope. The immutable
 [`v0.2.0-beta.4` successor prerelease](https://github.com/junyoung2015/spaceship-supabase/releases/tag/v0.2.0-beta.4)
-has passed the complete release gate and is published for a possible
-maintainer-private dogfood gate. Do not use the commands below until the release
-owner separately authorizes beta.4 testing in
-[#15](https://github.com/junyoung2015/spaceship-supabase/issues/15).
+has passed the complete release gate and is in owner only dogfood.
+[#15](https://github.com/junyoung2015/spaceship-supabase/issues/15)
+authorizes repository owner `@junyoung2015` only and explicitly excludes every
+other person. The initial matrix passed and the release owner recorded an
+`extend` decision for continued owner only testing.
 
-beta.3 test and dogfood evidence may support unchanged identity, sync, and
-prompt-safety code, but it is not beta.4 acceptance or authorization. beta.4
-now exists as an immutable reviewed tag and GitHub prerelease; the remaining
-gate is an explicit beta.4 decision in #15. Each person authorized by that
-decision must repeat the Core matrix plus the changed prefix, layout, migration,
-and rollback observations before the release owner records `go`, `extend`, or
-`pause` in [#15](https://github.com/junyoung2015/spaceship-supabase/issues/15).
+beta.3 evidence remains historical. The beta.4 initial matrix covers the changed
+prefix, layout, migration, rollback, identity, sync, and prompt safety checks.
+Longer real world evidence is still required before a stable readiness decision.
+The current authorization does not permit a teammate, contributor, external
+tester, or phase 2 alpha cohort to install or test beta.4.
+
+[Issue 9](https://github.com/junyoung2015/spaceship-supabase/issues/9) still
+requires sufficient redacted two person dogfood evidence before stable v0.2 can
+receive a `go` decision. The current owner only authorization cannot satisfy
+that gate. A second tester must receive a separate exact authorization in #15
+before contributing evidence toward stable promotion.
 
 > **beta.4 release scope:** beta.4 retains beta.3's strict support for the
 > v2.111.0+ `{ "projects": [...], "message": "" }` envelope. It adds the
@@ -38,8 +43,12 @@ and rollback observations before the release owner records `go`, `extend`, or
 
 ## Install or move to a reviewed beta
 
-For a new installation after beta.4 is published **and** #15 explicitly
-authorizes you for that exact tag, pin the tag while cloning:
+The commands below are currently for `@junyoung2015` only. A future tester may
+use them only if [#15](https://github.com/junyoung2015/spaceship-supabase/issues/15)
+explicitly names that person and the exact tag. Public repository access and a
+published prerelease do not authorize testing.
+
+Pin the tag while cloning:
 
 ```zsh
 release_tag='v0.2.0-beta.4'
@@ -63,9 +72,8 @@ exec zsh
 Use the location where you installed the plugin. Oh My Zsh’s default is
 `"${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/spaceship-supabase"`.
 
-During private dogfood, the clone/fetch requires an account with read access to
-the repository (or its SSH clone URL). The exact same tag-pinned procedure
-works for a later public beta without authentication.
+The repository is public, so cloning and fetching require no private repository
+access. Eligibility still comes only from the exact authorization in #15.
 
 ## Upgrade the prompt registration from beta.3
 
@@ -122,7 +130,8 @@ The `spaceship-ip` suffix repair may remain: it restores that section's normal
 Spaceship separator and is independent of Supabase identity resolution. Record
 plugin-tag rollback and host-configuration rollback as separate observations.
 
-After sourcing the beta, use the documented registration guard in the README.
+After sourcing the beta, use the beta.4 guard in
+[Upgrade the prompt registration from beta.3](#upgrade-the-prompt-registration-from-beta3).
 Its default puts the section before a present `line_sep`, producing
 `<status/context> at 🔷 <ref>` followed by `➜` on the next line when
 `SPACESHIP_PROMPT_SEPARATE_LINE=true` (the Spaceship default). To show the
@@ -147,26 +156,20 @@ Do not paste a project reference, manual label, full local path, TOML contents,
 credentials, terminal recording, or `spaceship_supabase_doctor --verbose`
 output unless you have deliberately sanitized it.
 
-## Private cohort and security findings
+## Authorized cohort and security findings
 
-The current authorization in #15 covers the repository owner and one named
-teammate testing beta.3 only. It does not carry forward to beta.4. The exact
-reviewed beta.4 tag and prerelease now exist, and the intended two-person
-private-repository access boundary has been verified. Dogfood still must not
-begin until the release owner records a new beta.4 authorization—including
-cohort, access, confidentiality, reporting route, and decision authority.
-Neither the beta.3 decision nor a future two-person beta.4 decision authorizes
-a third tester, an external or phase-2-alpha cohort, a visibility change, or a
-branch-tip installation.
+The current beta.4 authorization in #15 covers `@junyoung2015` only and
+explicitly excludes `@eddiesohn`, every other contributor, third parties,
+external testers, and the phase 2 alpha cohort. The initial owner matrix passed,
+and the `extend` decision permits continued owner only dogfood. It does not
+authorize stable publication, another tag, a branch tip installation, or a
+larger cohort.
 
 Do not place vulnerability details in ordinary feedback or a GitHub issue. Use
-the repository's [security policy](../SECURITY.md): submit a GitHub Security
-Advisory when GitHub exposes that route to the reporter, otherwise use the
-direct private channel explicitly agreed for the authorized cohort. The
-release-owner check for this private beta.4 gate found that GitHub's private
-vulnerability-reporting route is unavailable, and no exact direct channel is
-yet recorded in #15; that missing route currently blocks authorization. The
-policy's metadata-only public contact request asks only for a private route; it
-is never a vulnerability report. Confirm that the chosen private route is
-accessible before testing. A later external invitation requires a separately
-approved and tested reporting route.
+the exact direct email route recorded in #15 for the currently authorized owner.
+That route is a beta.4 gate specific exception documented in the repository's
+[security policy](../SECURITY.md). Other reporters should use GitHub's private
+vulnerability reporting route when it is available. The policy's metadata only
+public contact request asks only for a private route; it is never a vulnerability
+report. A later cohort expansion requires a separately approved and tested route
+before another person begins testing.
